@@ -1,0 +1,79 @@
+[project]
+name = "komfovent-c4"
+version = "0.1.0"
+description = "A Home Assistant integration for Komfovent DOMEKT units with the C4 controller, over Modbus TCP"
+readme = "README.md"
+requires-python = ">=3.13.2"
+authors = [
+    { name = "rkapsi" }
+]
+dependencies = [
+    "colorlog>=6.10.1",
+    "homeassistant>=2025.10.0",
+    "pymodbus>=3.10.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.20.0",
+    "pytest-cov>=4.0.0",
+    "pytest-homeassistant-custom-component>=0.13.285",
+    "ruff>=0.14.10",
+    "ty>=0.0.1a12",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+pythonpath = "."
+asyncio_mode = "auto"
+testpaths = ["tests"]
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.coverage.run]
+branch = true
+source = ["custom_components/komfovent_c4"]
+omit = ["tests/*", ".venv/*"]
+
+[tool.coverage.report]
+fail_under = 85
+precision = 0
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "ANN401",
+    "D203",
+    "D212",
+    "COM812",
+    "ISC001",
+]
+
+[tool.ruff.lint.flake8-pytest-style]
+fixture-parentheses = false
+
+[tool.ruff.lint.pyupgrade]
+keep-runtime-typing = true
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+    "ANN", "ARG001", "ARG002", "D103", "PLR2004", "S101", "SLF001",
+]
+
+[tool.ty.environment]
+python-version = "3.13"

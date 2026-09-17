@@ -1,0 +1,44 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Komfovent C4",
+        "description": "Connect to a Komfovent DOMEKT unit with a C4 controller over Modbus TCP.",
+        "data": {
+          "name": "Name",
+          "host": "Host",
+          "port": "Port"
+        },
+        "data_description": {
+          "host": "IP address of the unit, or of the Ping gateway in front of it.",
+          "port": "Modbus TCP port. The documented default is 502."
+        }
+      },
+      "reconfigure": {
+        "title": "Komfovent C4",
+        "data": {
+          "name": "Name",
+          "host": "Host",
+          "port": "Port"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "This host is already configured.",
+      "reconfigure_successful": "Reconfiguration was successful."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options",
+        "data": {
+          "update_interval": "Update interval"
+        },
+        "data_description": {
+          "update_interval": "How often to poll the unit. The C4 is often reached over a serial bridge, so short intervals may be unreliable."
+        }
+      }
+    }
+  }
+}
