@@ -23,10 +23,9 @@ panel the gateway sits between the panel and the unit.
 ## Register numbering
 
 The tables below use the 1-based register numbers printed in the PDF. This
-integration subtracts one to get the Modbus address put on the wire, matching
-the convention the C6/C8 integrations use against real hardware. If your unit
-appears to return values shifted by one register, this is the first thing to
-check — see `Register.address` in `registers.py`.
+integration subtracts one to get the Modbus address put on the wire (see
+`Register.address` in `registers.py`). This convention has been confirmed
+against a real C4 unit.
 
 All C4 registers are single 16-bit words. There are no 32-bit pairs.
 

@@ -16,11 +16,10 @@ integration instead.
 Written against the register map in [`docs/MODBUS_C4.pdf`](docs/MODBUS_C4.pdf)
 and documented in [`docs/MODBUS_C4.md`](docs/MODBUS_C4.md).
 
-**Not yet verified against hardware.** In particular the off-by-one register
-convention (the integration sends `documented number − 1` as the Modbus
-address) is inherited from the C6/C8 integration and has not been confirmed on
-a real C4. If every value looks shifted by one register, that is the thing to
-check first.
+The register addressing convention (the integration sends
+`documented number − 1` as the Modbus address) has been confirmed against a
+real C4 unit. The entity set in this rewrite has not yet been run against
+hardware.
 
 ## Installation
 
