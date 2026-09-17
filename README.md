@@ -60,6 +60,26 @@ uv run ty check
 needs no Home Assistant runtime; the rest of the suite runs against a mocked
 Modbus client.
 
+### Working without the hardware
+
+Dump every documented register from the real unit once:
+
+```bash
+uv run python scripts/modbus_dump.py --host <unit-ip> --output tests/fixtures/C4_registers_mine.json
+```
+
+Then serve that dump as a fake C4 and point the integration (or the live
+tests) at it:
+
+```bash
+uv run python scripts/modbus_server.py --input tests/fixtures/C4_registers_mine.json --port 5020
+uv run pytest tests/test_live_modbus.py -v --socket-enabled
+```
+
+`tests/fixtures/C4_registers_synthetic.json` is a hand-written dump in the same
+format for when no real one is available. The dump is also what Home Assistant's
+**Download diagnostics** button produces for the device.
+
 ## Credits
 
 The entity structure and Modbus handling started as a fork of

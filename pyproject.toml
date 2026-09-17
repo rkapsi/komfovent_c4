@@ -31,6 +31,9 @@ pythonpath = "."
 asyncio_mode = "auto"
 testpaths = ["tests"]
 asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "enable_socket: run against a real socket (simulator)",
+]
 
 [tool.coverage.run]
 branch = true
@@ -72,8 +75,9 @@ keep-runtime-typing = true
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = [
-    "ANN", "ARG001", "ARG002", "D103", "PLR2004", "S101", "SLF001",
+    "ANN", "ARG001", "ARG002", "D103", "PLR2004", "S101", "S311", "SLF001",
 ]
+"scripts/**" = ["T201"]
 
 [tool.ty.environment]
 python-version = "3.13"
