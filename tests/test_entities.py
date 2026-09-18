@@ -204,6 +204,23 @@ async def test_missing_sensor_reads_unknown(
     assert hass.states.get("sensor.komfovent_c4_water_temperature").state == "unknown"
 
 
+async def test_clock_sensor_assembles_local_datetime(hass, setup_integration):
+    """8:05 on 9 May 2026 in the fixture, read as HA's local time (US/Pacific in tests)."""
+    state = hass.states.get("sensor.komfovent_c4_clock")
+    assert state.state == "2026-05-09T15:05:00+00:00"  # HA reports timestamps in UTC
+
+
+async def test_clock_sensor_unknown_on_garbage(
+    hass, config_entry, mock_client, register_data
+):
+    register_data[Register.MONTH_DAY] = 0x0D20  # month 13
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.komfovent_c4_clock").state == "unknown"
+
+
 async def test_unload(hass, setup_integration):
     assert await hass.config_entries.async_unload(setup_integration.entry_id)
     await hass.async_block_till_done()

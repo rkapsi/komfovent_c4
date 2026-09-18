@@ -51,7 +51,7 @@ in front of it — and the Modbus TCP port, which the documentation gives as 502
 | Platform | Entities |
 | --- | --- |
 | Climate | The unit itself: supply air temperature, setpoint (0–30 °C), on/off, and ventilation level as the fan mode |
-| Sensor | Supply air and water temperature, recuperator / electric heater / water heating / water cooling levels, supply and exhaust fan levels, current ventilation level, boost time remaining, stop reason |
+| Sensor | Supply air and water temperature, recuperator / electric heater / water heating / water cooling levels, supply and exhaust fan levels, current ventilation level, boost time remaining, stop reason, the controller's clock |
 | Binary sensor | Fans running, plus one entity per documented warning and stop flag |
 | Switch | Power, boost |
 | Select | Ventilation level, operation mode (manual/auto), season |

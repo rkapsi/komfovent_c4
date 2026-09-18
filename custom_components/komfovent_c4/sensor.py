@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
@@ -16,6 +18,7 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfTime,
 )
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, TEMP_NO_SENSOR, StopCode
 from .entity import KomfoventC4Entity
@@ -27,6 +30,8 @@ if TYPE_CHECKING:
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
     from .coordinator import KomfoventC4Coordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 TEMPERATURE_SENSORS: tuple[tuple[Register, SensorEntityDescription], ...] = (
     (
@@ -171,6 +176,17 @@ async def async_setup_entry(
             Register.ALARM_STOP_CODE,
         )
     )
+    entities.append(
+        ClockSensor(
+            coordinator,
+            SensorEntityDescription(
+                key="clock",
+                name="Clock",
+                device_class=SensorDeviceClass.TIMESTAMP,
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+        )
+    )
 
     async_add_entities(entities)
 
@@ -209,3 +225,33 @@ class StopCodeSensor(KomfoventC4Sensor):
             return StopCode(value).name.lower()
         except ValueError:
             return None
+
+
+class ClockSensor(KomfoventC4Entity, SensorEntity):
+    """
+    The controller's own clock, assembled from registers 1002, 1004 and 1005.
+
+    The C4 has no NTP and drifts; this makes the drift visible so the sync
+    clock button can be pressed (or automated) when it matters. Resolution is
+    one minute — the controller exposes no seconds.
+    """
+
+    @property
+    def native_value(self) -> datetime | None:
+        """Return the controller's local time as an aware datetime."""
+        data = self.coordinator.data
+        if not data:
+            return None
+        try:
+            time, month_day, year = (
+                data[Register.TIME],
+                data[Register.MONTH_DAY],
+                data[Register.YEAR],
+            )
+            naive = datetime(  # noqa: DTZ001 -- localised right below
+                year, month_day >> 8, month_day & 0xFF, time >> 8, time & 0xFF
+            )
+        except (KeyError, ValueError):
+            _LOGGER.debug("Controller clock registers do not form a valid date")
+            return None
+        return naive.replace(tzinfo=dt_util.get_default_time_zone())
