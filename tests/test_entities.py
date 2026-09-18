@@ -205,9 +205,11 @@ async def test_missing_sensor_reads_unknown(
 
 
 async def test_clock_sensor_assembles_local_datetime(hass, setup_integration):
-    """8:05 on 9 May 2026 in the fixture, read as HA's local time (US/Pacific in tests)."""
+    """8:05 on 9 May 2026 in the fixture, shown as the panel would show it."""
     state = hass.states.get("sensor.komfovent_c4_clock")
-    assert state.state == "2026-05-09T15:05:00+00:00"  # HA reports timestamps in UTC
+    assert state.state == "2026-05-09 08:05"
+    # Test HA runs in US/Pacific; the controller clock is taken as local time.
+    assert state.attributes["timestamp"] == "2026-05-09T08:05:00-07:00"
 
 
 async def test_clock_sensor_unknown_on_garbage(

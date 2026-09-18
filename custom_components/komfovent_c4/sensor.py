@@ -182,7 +182,6 @@ async def async_setup_entry(
             SensorEntityDescription(
                 key="clock",
                 name="Clock",
-                device_class=SensorDeviceClass.TIMESTAMP,
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
         )
@@ -234,10 +233,27 @@ class ClockSensor(KomfoventC4Entity, SensorEntity):
     The C4 has no NTP and drifts; this makes the drift visible so the sync
     clock button can be pressed (or automated) when it matters. Resolution is
     one minute — the controller exposes no seconds.
+
+    Deliberately not a TIMESTAMP sensor: the frontend renders those as
+    "5 minutes ago", which is useless for a clock. The state is the plain
+    ``YYYY-MM-DD HH:MM`` the controller would show on its own panel, in the
+    controller's (i.e. local) time; the parsed datetime is an attribute.
     """
 
     @property
-    def native_value(self) -> datetime | None:
+    def native_value(self) -> str | None:
+        """Return the controller's clock as ``YYYY-MM-DD HH:MM``."""
+        clock = self.clock
+        return None if clock is None else clock.strftime("%Y-%m-%d %H:%M")
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str] | None:
+        """Expose the clock as an ISO timestamp for templates."""
+        clock = self.clock
+        return None if clock is None else {"timestamp": clock.isoformat()}
+
+    @property
+    def clock(self) -> datetime | None:
         """Return the controller's local time as an aware datetime."""
         data = self.coordinator.data
         if not data:
