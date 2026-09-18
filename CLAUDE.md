@@ -54,6 +54,22 @@ interpreted in is `CONF_TIME_ZONE` on the config entry (asked for next to the
 host, defaulting to HA's zone) and exposed as `coordinator.time_zone`; the sync
 button writes and the clock sensor reads in that zone, nowhere else.
 
+## When a Home Assistant update breaks it
+
+Last verified against Home Assistant 2026.9 (the version
+`pytest-homeassistant-custom-component` pulled in at the time). To chase a
+breakage: recreate `.venv` so the test package matches the HA release in
+question (`pip install "pytest-homeassistant-custom-component==<release
+matching that HA>"`; its versions track HA's), run the suite, and read any
+deprecation warnings it prints — HA announces removals a few releases ahead in
+those and in the release-notes "breaking changes for custom integrations".
+The integration uses only stable helpers (`DataUpdateCoordinator`,
+`CoordinatorEntity`, `ConfigFlow`, entity descriptions); if something
+disappears, look for its renamed replacement in
+`.venv/lib/python*/site-packages/homeassistant/helpers/` before rewriting.
+HA's own logs on the running instance (`Settings → System → Logs`, filter
+`komfovent_c4`) give the traceback; paste it into the session.
+
 ## Releasing
 
 The version is in `custom_components/komfovent_c4/manifest.json` and nowhere
