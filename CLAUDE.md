@@ -54,6 +54,12 @@ interpreted in is `CONF_TIME_ZONE` on the config entry (asked for next to the
 host, defaulting to HA's zone) and exposed as `coordinator.time_zone`; the sync
 button writes and the clock sensor reads in that zone, nowhere else.
 
+## Releasing
+
+The version is in `custom_components/komfovent_c4/manifest.json` and nowhere
+else (`pyproject.toml` declares it dynamic). Bump it, commit, tag `v<version>`;
+`release.yml` refuses a tag that does not match the manifest.
+
 ## Shape
 
 - One `Register` enum carrying `(number, datatype, access)`. All C4 registers

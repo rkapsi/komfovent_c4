@@ -1,6 +1,9 @@
 [project]
 name = "komfovent-c4"
-version = "1.0.0"
+# The version lives in custom_components/komfovent_c4/manifest.json only; that
+# is what Home Assistant and HACS read, and release.yml checks the tag against
+# it. This project is never built, so nothing needs a copy here.
+dynamic = ["version"]
 description = "A Home Assistant integration for Komfovent DOMEKT units with the C4 controller, over Modbus TCP"
 readme = "README.md"
 requires-python = ">=3.13.2"
