@@ -7,11 +7,13 @@
         "data": {
           "name": "Name",
           "host": "Host",
-          "port": "Port"
+          "port": "Port",
+          "time_zone": "Time zone"
         },
         "data_description": {
           "host": "IP address of the unit, or of the Ping gateway in front of it.",
-          "port": "Modbus TCP port. The documented default is 502."
+          "port": "Modbus TCP port. The documented default is 502.",
+          "time_zone": "The zone the controller's clock is kept in. Only change this if the unit is not where Home Assistant is."
         }
       },
       "reconfigure": {
@@ -19,7 +21,11 @@
         "data": {
           "name": "Name",
           "host": "Host",
-          "port": "Port"
+          "port": "Port",
+          "time_zone": "Time zone"
+        },
+        "data_description": {
+          "time_zone": "The zone the controller's clock is kept in. Only change this if the unit is not where Home Assistant is."
         }
       }
     },

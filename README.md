@@ -46,6 +46,10 @@ from **Settings → Devices & services**.
 You will need the IP address of the unit — or of the Komfovent "Ping" gateway
 in front of it — and the Modbus TCP port, which the documentation gives as 502.
 
+The form also asks for the time zone the controller's clock is kept in. It
+defaults to Home Assistant's own zone, which is right unless the unit is
+somewhere else; the clock sensor and the sync-clock button both use it.
+
 ## Entities
 
 | Platform | Entities |

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import zoneinfo
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
@@ -10,12 +11,15 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TIME_ZONE
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
 )
 
 from .const import (
@@ -29,11 +33,23 @@ from .const import (
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
 
+# The C4 keeps a wall clock with no notion of zones. This is the zone that
+# clock is read and written in; it only differs from Home Assistant's when the
+# unit is somewhere else.
+TIME_ZONE_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=sorted(zoneinfo.available_timezones()),
+        mode=SelectSelectorMode.DROPDOWN,
+        sort=True,
+    )
+)
+
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        vol.Required(CONF_TIME_ZONE): TIME_ZONE_SELECTOR,
     }
 )
 
@@ -69,7 +85,9 @@ class KomfoventC4ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, user_input),
+            data_schema=self.add_suggested_values_to_schema(
+                CONFIG_SCHEMA, {CONF_TIME_ZONE: self.hass.config.time_zone}
+            ),
         )
 
     async def async_step_reconfigure(
@@ -88,7 +106,8 @@ class KomfoventC4ConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                CONFIG_SCHEMA, reconfigure_entry.data
+                CONFIG_SCHEMA,
+                {CONF_TIME_ZONE: self.hass.config.time_zone, **reconfigure_entry.data},
             ),
         )
 

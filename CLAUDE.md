@@ -46,9 +46,10 @@ back flips the entity to the stale value. Measured behaviour is recorded under
 
 The setpoint (1201) only holds even tenths of a degree; round before writing.
 
-The controller's clock (1002-1005) is, by decision, in Home Assistant's local
-time zone: the C4 has no zone concept, the sync button writes HA local time,
-and the clock sensor reads it back the same way. Do not add zone handling.
+The controller's clock (1002-1005) is a zone-less wall clock. The zone it is
+interpreted in is `CONF_TIME_ZONE` on the config entry (asked for next to the
+host, defaulting to HA's zone) and exposed as `coordinator.time_zone`; the sync
+button writes and the clock sensor reads in that zone, nowhere else.
 
 ## Shape
 

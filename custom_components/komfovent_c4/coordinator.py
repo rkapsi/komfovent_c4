@@ -6,13 +6,14 @@ import logging
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TIME_ZONE
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import (
     TimestampDataUpdateCoordinator,
     UpdateFailed,
 )
+from homeassistant.util import dt as dt_util
 from pymodbus.exceptions import ModbusException
 
 from .const import DEFAULT_UPDATE_INTERVAL, DOMAIN, WRITE_SETTLE_SECONDS
@@ -21,7 +22,7 @@ from .registers import POLL_BLOCKS, Register
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-    from datetime import datetime
+    from datetime import datetime, tzinfo
 
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
@@ -53,6 +54,18 @@ class KomfoventC4Coordinator(TimestampDataUpdateCoordinator[dict[Register, int]]
             port=config_entry.data[CONF_PORT],
         )
         self._cancel_settle: Callable[[], None] | None = None
+
+    @property
+    def time_zone(self) -> tzinfo:
+        """
+        Return the zone the controller's clock is kept in.
+
+        Configured alongside the host; entries created before the option
+        existed fall back to Home Assistant's own zone.
+        """
+        name = self.config_entry.data.get(CONF_TIME_ZONE)
+        zone = dt_util.get_time_zone(name) if name else None
+        return zone or dt_util.get_default_time_zone()
 
     async def connect(self) -> bool:
         """

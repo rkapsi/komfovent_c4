@@ -50,8 +50,8 @@ class SyncClockButton(KomfoventC4Entity, ButtonEntity):
     """
 
     async def async_press(self) -> None:
-        """Write the current local date and time to the controller."""
-        now = dt_util.now()
+        """Write the current date and time, in the configured zone, to the controller."""
+        now = dt_util.now(self.coordinator.time_zone)
 
         # The documentation packs these as two bytes per register:
         # 8:05 => 0x0805 and 9 May => 0x0509.

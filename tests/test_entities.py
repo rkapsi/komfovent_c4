@@ -18,7 +18,7 @@ from homeassistant.components.climate import (
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, CONF_TIME_ZONE, STATE_OFF, STATE_ON
 from pymodbus import ModbusException
 
 from custom_components.komfovent_c4.const import DOMAIN
@@ -210,6 +210,43 @@ async def test_clock_sensor_assembles_local_datetime(hass, setup_integration):
     assert state.state == "2026-05-09 08:05"
     # Test HA runs in US/Pacific; the controller clock is taken as local time.
     assert state.attributes["timestamp"] == "2026-05-09T08:05:00-07:00"
+
+
+async def test_clock_uses_configured_zone(hass, config_entry, mock_client):
+    """A unit in another zone: its wall clock is read in that zone, not HA's."""
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry, data={**config_entry.data, CONF_TIME_ZONE: "Europe/Tallinn"}
+    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.komfovent_c4_clock")
+    assert state.state == "2026-05-09 08:05"
+    assert state.attributes["timestamp"] == "2026-05-09T08:05:00+03:00"
+
+
+async def test_sync_clock_writes_configured_zone(
+    hass, config_entry, mock_client, freezer
+):
+    """08:05 UTC is 11:05 in Tallinn; that is what the controller must get."""
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry, data={**config_entry.data, CONF_TIME_ZONE: "Europe/Tallinn"}
+    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    freezer.move_to("2026-05-09 08:05:00+00:00")
+    await hass.services.async_call(
+        "button",
+        "press",
+        {ATTR_ENTITY_ID: "button.komfovent_c4_sync_clock"},
+        blocking=True,
+    )
+
+    calls = [c.args for c in mock_client.write.await_args_list]
+    assert (Register.TIME, 0x0B05) in calls
 
 
 async def test_clock_sensor_unknown_on_garbage(

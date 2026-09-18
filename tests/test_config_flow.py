@@ -3,12 +3,17 @@
 from __future__ import annotations
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TIME_ZONE
 from homeassistant.data_entry_flow import FlowResultType
 
 from custom_components.komfovent_c4.const import DOMAIN, OPT_UPDATE_INTERVAL
 
-USER_INPUT = {CONF_NAME: "Basement AHU", CONF_HOST: "192.0.2.20", CONF_PORT: 502}
+USER_INPUT = {
+    CONF_NAME: "Basement AHU",
+    CONF_HOST: "192.0.2.20",
+    CONF_PORT: 502,
+    CONF_TIME_ZONE: "Europe/Tallinn",
+}
 
 
 async def test_user_flow_creates_entry(hass, mock_client):
@@ -17,6 +22,13 @@ async def test_user_flow_creates_entry(hass, mock_client):
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # The form suggests HA's own zone (US/Pacific in the test harness).
+    suggested = {
+        str(key): key.description["suggested_value"]
+        for key in result["data_schema"].schema
+        if key.description and "suggested_value" in key.description
+    }
+    assert suggested[CONF_TIME_ZONE] == hass.config.time_zone
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=USER_INPUT

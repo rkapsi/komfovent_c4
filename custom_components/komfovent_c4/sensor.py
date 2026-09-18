@@ -18,7 +18,6 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfTime,
 )
-from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, TEMP_NO_SENSOR, StopCode
 from .entity import KomfoventC4Entity
@@ -237,7 +236,7 @@ class ClockSensor(KomfoventC4Entity, SensorEntity):
     Deliberately not a TIMESTAMP sensor: the frontend renders those as
     "5 minutes ago", which is useless for a clock. The state is the plain
     ``YYYY-MM-DD HH:MM`` the controller would show on its own panel, in the
-    controller's (i.e. local) time; the parsed datetime is an attribute.
+    configured time zone; the parsed datetime is an attribute.
     """
 
     @property
@@ -270,4 +269,4 @@ class ClockSensor(KomfoventC4Entity, SensorEntity):
         except (KeyError, ValueError):
             _LOGGER.debug("Controller clock registers do not form a valid date")
             return None
-        return naive.replace(tzinfo=dt_util.get_default_time_zone())
+        return naive.replace(tzinfo=self.coordinator.time_zone)
