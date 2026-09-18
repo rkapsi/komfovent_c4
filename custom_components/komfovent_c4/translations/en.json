@@ -52,7 +52,7 @@
       "operation_mode": {
         "state": {
           "manual": "Manual",
-          "auto": "Unit's weekly schedule"
+          "auto": "Weekly schedule"
         }
       }
     }

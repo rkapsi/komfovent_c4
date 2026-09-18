@@ -58,7 +58,7 @@ somewhere else; the clock sensor and the sync-clock button both use it.
 | Sensor | Supply air and water temperature, recuperator / electric heater / water heating / water cooling levels, supply and exhaust fan levels, current ventilation level, boost time remaining, stop reason, the controller's clock |
 | Binary sensor | Fans running, plus one entity per documented warning and stop flag |
 | Switch | Power, boost |
-| Select | Ventilation level, operation mode (manual / unit's weekly schedule), season |
+| Select | Ventilation level, operation mode (manual / weekly schedule), season |
 | Number | Intake and exhaust intensity for levels 1–3 and for boost (level 4), boost duration, temperature correction |
 | Button | Sync clock — writes Home Assistant's local time to the controller |
 
@@ -97,7 +97,7 @@ Keep the operation mode on *Manual* and let Home Assistant drive the level:
    off outright.
 
 Because the unit's own schedule is normally empty in this setup, and an empty
-schedule under *Unit's weekly schedule* keeps the unit **off**, the operation
+schedule under *Weekly schedule* keeps the unit **off**, the operation
 mode select refuses to switch to it while nothing is programmed on the unit.
 The schedule registers are read only at that moment; they are never polled.
 
