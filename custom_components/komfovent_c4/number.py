@@ -35,15 +35,17 @@ if TYPE_CHECKING:
 
     from .coordinator import KomfoventC4Coordinator
 
+# Level 4 cannot be selected through 1100; it is the preset the OVR ("boost")
+# switch runs, so it is named after that rather than by number.
 INTENSITY_REGISTERS: tuple[tuple[Register, str, str], ...] = (
     (Register.INTAKE_INTENSITY_1, "intake_intensity_1", "Intake intensity level 1"),
     (Register.INTAKE_INTENSITY_2, "intake_intensity_2", "Intake intensity level 2"),
     (Register.INTAKE_INTENSITY_3, "intake_intensity_3", "Intake intensity level 3"),
-    (Register.INTAKE_INTENSITY_4, "intake_intensity_4", "Intake intensity level 4"),
+    (Register.INTAKE_INTENSITY_4, "intake_intensity_4", "Boost intake intensity"),
     (Register.EXHAUST_INTENSITY_1, "exhaust_intensity_1", "Exhaust intensity level 1"),
     (Register.EXHAUST_INTENSITY_2, "exhaust_intensity_2", "Exhaust intensity level 2"),
     (Register.EXHAUST_INTENSITY_3, "exhaust_intensity_3", "Exhaust intensity level 3"),
-    (Register.EXHAUST_INTENSITY_4, "exhaust_intensity_4", "Exhaust intensity level 4"),
+    (Register.EXHAUST_INTENSITY_4, "exhaust_intensity_4", "Boost exhaust intensity"),
 )
 
 
