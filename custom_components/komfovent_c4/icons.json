@@ -1,0 +1,80 @@
+{
+  "entity": {
+    "climate": {
+      "climate": {
+        "default": "mdi:hvac",
+        "state_attributes": {
+          "fan_mode": {
+            "default": "mdi:fan",
+            "state": {
+              "level_1": "mdi:fan-speed-1",
+              "level_2": "mdi:fan-speed-2",
+              "level_3": "mdi:fan-speed-3"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "recuperator_level": { "default": "mdi:heat-wave" },
+      "electric_heater_level": { "default": "mdi:radiator" },
+      "water_heating_level": { "default": "mdi:water-boiler" },
+      "water_cooling_level": { "default": "mdi:snowflake" },
+      "supply_fan_level": { "default": "mdi:home-import-outline" },
+      "exhaust_fan_level": { "default": "mdi:home-export-outline" },
+      "ventilation_level_current": {
+        "default": "mdi:fan",
+        "state": {
+          "1": "mdi:fan-speed-1",
+          "2": "mdi:fan-speed-2",
+          "3": "mdi:fan-speed-3",
+          "4": "mdi:rocket"
+        }
+      },
+      "ovr_time_remaining": { "default": "mdi:timer-sand" },
+      "stop_code": { "default": "mdi:alert-octagon-outline" },
+      "clock": { "default": "mdi:clock-outline" }
+    },
+    "switch": {
+      "power": { "default": "mdi:power" },
+      "boost": { "default": "mdi:rocket" }
+    },
+    "select": {
+      "ventilation_level": {
+        "default": "mdi:fan",
+        "state": {
+          "level_1": "mdi:fan-speed-1",
+          "level_2": "mdi:fan-speed-2",
+          "level_3": "mdi:fan-speed-3"
+        }
+      },
+      "operation_mode": {
+        "default": "mdi:fan-auto",
+        "state": {
+          "manual": "mdi:hand-back-right-outline",
+          "auto": "mdi:calendar-clock"
+        }
+      },
+      "season": {
+        "default": "mdi:sun-snowflake-variant",
+        "state": {
+          "summer": "mdi:weather-sunny",
+          "winter": "mdi:snowflake"
+        }
+      }
+    },
+    "number": {
+      "intake_intensity_1": { "default": "mdi:home-import-outline" },
+      "intake_intensity_2": { "default": "mdi:home-import-outline" },
+      "intake_intensity_3": { "default": "mdi:home-import-outline" },
+      "intake_intensity_4": { "default": "mdi:home-import-outline" },
+      "exhaust_intensity_1": { "default": "mdi:home-export-outline" },
+      "exhaust_intensity_2": { "default": "mdi:home-export-outline" },
+      "exhaust_intensity_3": { "default": "mdi:home-export-outline" },
+      "exhaust_intensity_4": { "default": "mdi:home-export-outline" }
+    },
+    "button": {
+      "sync_clock": { "default": "mdi:clock-check-outline" }
+    }
+  }
+}

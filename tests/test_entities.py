@@ -20,6 +20,8 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_TIME_ZONE, STATE_OFF, STATE_ON
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.icon import async_get_icons
 from pymodbus import ModbusException
 
 from custom_components.komfovent_c4.const import DOMAIN, SCHEDULE_COUNT, SCHEDULE_SLOTS
@@ -430,3 +432,32 @@ async def test_coordinator_marks_entities_unavailable_on_error(
     await coordinator.async_refresh()
 
     assert hass.states.get(CLIMATE).state == "unavailable"
+
+
+async def test_icons_json_is_loaded_and_keyed_by_existing_entities(
+    hass, setup_integration
+):
+    """
+    Check icons.json loads and every key belongs to an entity.
+
+    It is keyed by translation_key and resolved by the frontend, so a typo
+    there loses the icon silently rather than failing anywhere.
+    """
+    icons = await async_get_icons(hass, "entity", integrations=[DOMAIN])
+    assert icons[DOMAIN]["switch"]["boost"]["default"] == "mdi:rocket"
+    assert (
+        icons[DOMAIN]["select"]["ventilation_level"]["state"]["level_2"]
+        == "mdi:fan-speed-2"
+    )
+
+    registry = er.async_get(hass)
+    keys = {
+        (entry.domain, entry.translation_key)
+        for entry in er.async_entries_for_config_entry(
+            registry, setup_integration.entry_id
+        )
+    }
+    for platform, entities in icons[DOMAIN].items():
+        for translation_key, icon in entities.items():
+            assert (platform, translation_key) in keys, (platform, translation_key)
+            assert icon["default"].startswith("mdi:")

@@ -61,6 +61,9 @@ button writes and the clock sensor reads in that zone, nowhere else.
   behind a 19200-baud serial bridge.
 - `entity.py` holds the one base class every platform subclasses. Platforms
   are flat tables of `(Register, EntityDescription)`; add entities there.
+  Every entity's `translation_key` is its description `key`; `icons.json` is
+  keyed by it, so give a new entity an icon there too (the test checks keys
+  match, nothing checks the MDI name exists).
 - Alarm registers 1007/1008 are bitfields. Never coerce them to 0/1.
 - The weekly schedule (1300-1362) is documented, dumped by diagnostics, but
   not polled and has no entities or `Register` members. That is a decision,
