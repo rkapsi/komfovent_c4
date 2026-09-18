@@ -46,6 +46,10 @@ back flips the entity to the stale value. Measured behaviour is recorded under
 
 The setpoint (1201) only holds even tenths of a degree; round before writing.
 
+The controller's clock (1002-1005) is, by decision, in Home Assistant's local
+time zone: the C4 has no zone concept, the sync button writes HA local time,
+and the clock sensor reads it back the same way. Do not add zone handling.
+
 ## Shape
 
 - One `Register` enum carrying `(number, datatype, access)`. All C4 registers
