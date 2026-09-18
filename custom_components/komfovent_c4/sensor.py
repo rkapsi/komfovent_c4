@@ -10,9 +10,14 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature, UnitOfTime
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfTemperature,
+    UnitOfTime,
+)
 
-from .const import DOMAIN, StopCode
+from .const import DOMAIN, TEMP_NO_SENSOR, StopCode
 from .entity import KomfoventC4Entity
 from .registers import Register
 
@@ -180,13 +185,15 @@ class KomfoventC4Sensor(KomfoventC4Entity, SensorEntity):
 
 
 class ScaledSensor(KomfoventC4Sensor):
-    """A sensor whose register holds the value multiplied by ten."""
+    """A temperature sensor whose register holds tenths of a degree."""
 
     @property
     def native_value(self) -> float | None:
-        """Return the register value scaled back to real units."""
+        """Return the register value in degrees, or None if no sensor is fitted."""
         value = self.raw_value
-        return None if value is None else value / 10
+        if value is None or value == TEMP_NO_SENSOR:
+            return None
+        return value / 10
 
 
 class StopCodeSensor(KomfoventC4Sensor):

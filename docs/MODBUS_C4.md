@@ -108,6 +108,10 @@ selection, which is why register 1101 has a wider range than 1100.
 
 > Note 1205, not 1203. Getting these two confused is easy and silent.
 
+A temperature register whose sensor is not fitted reads `0x7FFF` (32767).
+Observed on 1205 of a unit with an electric heater and no water coil; the
+integration reports such a sensor as unknown rather than as 3276.7 °C.
+
 ## Schedule (1300–1362)
 
 Three start/stop time pairs per weekday at 1300–1341 (`0x0000`…`0x1800`,
@@ -119,6 +123,24 @@ mirroring it into Home Assistant would roughly double the size of this
 integration for something that is set once. Register 1102 switches between
 following that schedule (auto) and ignoring it (manual), which covers the
 common case.
+
+## Observed on hardware
+
+`tests/fixtures/C4_registers_mine.json` is a dump taken from a real DOMEKT
+with a C4 on 2026-09-18 (electric heater, no water coil, manual mode, level 3).
+Points worth knowing that the PDF does not state:
+
+- All four blocks, schedule included, read in a single transaction each; the
+  unit does not reject multi-register reads.
+- The clock registers (1002–1005) decoded to the correct local date, weekday
+  and time, which independently confirms the `number − 1` addressing.
+- 1007 read `0x2000` (bit 13, "heater off") while the electric heater level
+  (1011) was 0 %, so that bit reports the heater being disabled, not a fault.
+- 1101 (current level) matched 1100 (manual level) in manual mode, and 1115/
+  1116 (fan levels) matched the level-3 intensity registers 1105/1109.
+- 1205 read `0x7FFF`, the no-sensor value described above.
+- 1300–1362 were all zero: an unused schedule reads as `0x0000` rather than
+  as a default programme.
 
 ## What the C4 does not have
 

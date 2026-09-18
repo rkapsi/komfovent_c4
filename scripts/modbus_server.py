@@ -30,12 +30,12 @@ async def run_server(host: str, port: int, register_data: dict[str, list[int]]) 
     """
     Serve ``register_data`` as holding registers.
 
-    Keys are 1-based register numbers, matching ``scripts/modbus_dump.py`` output.
-    pymodbus's default (non-zero) addressing mode adds one to each requested
-    address before the lookup, which is exactly the offset the client subtracts,
-    so the fixture can be keyed the same way the documentation is.
+    Keys are 1-based register numbers, matching ``scripts/modbus_dump.py`` output
+    and the documentation. The datastore is keyed by wire address, so each run is
+    stored at ``number - 1`` — the same offset the client applies on its side.
+    Recent pymodbus (3.11+) looks addresses up directly; it no longer adds one.
     """
-    block = ModbusSparseDataBlock({int(k): v for k, v in register_data.items()})
+    block = ModbusSparseDataBlock({int(k) - 1: v for k, v in register_data.items()})
     context = ModbusServerContext(devices=ModbusDeviceContext(hr=block), single=True)
 
     identity = ModbusDeviceIdentification()

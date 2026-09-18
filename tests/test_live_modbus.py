@@ -4,7 +4,7 @@ Tests that drive the real client against a simulated C4 over a real socket.
 Unlike the mocked tests these exercise pymodbus framing and the documented
 register-number-to-address offset end to end.
 
-    uv run pytest tests/test_live_modbus.py -v --socket-enabled
+    uv run pytest tests/test_live_modbus.py -v
 """
 
 from __future__ import annotations
@@ -21,16 +21,20 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.komfovent_c4.const import DOMAIN
 from custom_components.komfovent_c4.coordinator import KomfoventC4Coordinator
+from custom_components.komfovent_c4.dump import dump_registers
 from custom_components.komfovent_c4.modbus import KomfoventC4Client
-from custom_components.komfovent_c4.registers import POLL_BLOCKS, Register
+from custom_components.komfovent_c4.registers import POLL_BLOCKS, DataType, Register
 from scripts.modbus_server import run_server
 
-FIXTURE = Path(__file__).parent / "fixtures" / "C4_registers_synthetic.json"
+FIXTURES = Path(__file__).parent / "fixtures"
+SYNTHETIC = FIXTURES / "C4_registers_synthetic.json"
+REAL = FIXTURES / "C4_registers_mine.json"
 
 
-@pytest.fixture
-def register_dump() -> dict[str, list[int]]:
-    with FIXTURE.open() as f:
+@pytest.fixture(params=[SYNTHETIC, REAL], ids=["synthetic", "real"])
+def register_dump(request) -> dict[str, list[int]]:
+    """Load a register dump; the live tests run once per fixture file."""
+    with request.param.open() as f:
         return json.load(f)
 
 
@@ -58,6 +62,14 @@ def _expected(dump: dict[str, list[int]], register: Register) -> int:
     raise KeyError(msg)
 
 
+def _decoded(dump: dict[str, list[int]], register: Register) -> int:
+    """Look a register up in the dump and apply the client's int16 decoding."""
+    raw = _expected(dump, register)
+    if register.datatype is DataType.INT16 and raw >= 0x8000:
+        return raw - 0x10000
+    return raw
+
+
 @pytest.mark.enable_socket
 async def test_client_reads_every_poll_block(simulator, register_dump):
     client = KomfoventC4Client("127.0.0.1", simulator)
@@ -69,9 +81,8 @@ async def test_client_reads_every_poll_block(simulator, register_dump):
             data.update(await client.read_block(start, count))
 
         assert set(data) == set(Register)
-        assert data[Register.POWER] == 1
-        assert data[Register.SETPOINT_TEMP] == 200
-        assert data[Register.WATER_TEMP] == 450
+        for register in Register:
+            assert data[register] == _decoded(register_dump, register), register
         # Off-by-one guard: 1205 must not come back with 1203's value.
         assert data[Register.WATER_TEMP] != _expected(
             register_dump, Register.TEMP_CORRECTION_START
@@ -81,7 +92,9 @@ async def test_client_reads_every_poll_block(simulator, register_dump):
 
 
 @pytest.mark.enable_socket
+@pytest.mark.parametrize("register_dump", [SYNTHETIC], indirect=True)
 async def test_client_decodes_negative_int16_over_the_wire(simulator):
+    """Only the synthetic dump carries a negative correction (-2.5 C)."""
     client = KomfoventC4Client("127.0.0.1", simulator)
     try:
         await client.connect()
@@ -120,8 +133,39 @@ async def test_coordinator_against_simulator(hass, simulator, register_dump):
         assert coordinator.data is not None
         assert len(coordinator.data) == len(list(Register))
         for register in Register:
-            raw = _expected(register_dump, register)
-            expected = raw - 0x10000 if raw >= 0x8000 and register.datatype.value == "int16" else raw
-            assert coordinator.data[register] == expected, register
+            assert coordinator.data[register] == _decoded(register_dump, register), (
+                register
+            )
     finally:
         coordinator.client.close()
+
+
+@pytest.mark.enable_socket
+async def test_dump_registers_roundtrips_fixture(simulator, register_dump):
+    """Dumping the simulator must reproduce the fixture it was started from."""
+    dumped = await dump_registers("127.0.0.1", simulator)
+    assert {str(k): v for k, v in dumped.items()} == register_dump
+
+
+@pytest.mark.enable_socket
+@pytest.mark.parametrize("register_dump", [SYNTHETIC], indirect=True)
+async def test_dump_registers_skips_unreadable_block(register_dump):
+    """A block the unit rejects falls back to single reads and is then skipped."""
+    partial = {k: v for k, v in register_dump.items() if k != "1300"}
+    port = random.randint(1024, 50000)
+    task = asyncio.create_task(run_server("127.0.0.1", port, partial))
+    await asyncio.sleep(0.1)
+    try:
+        dumped = await dump_registers("127.0.0.1", port)
+    finally:
+        task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await task
+
+    assert set(dumped) == {1000, 1100, 1200}
+
+
+@pytest.mark.enable_socket
+async def test_dump_registers_raises_when_unreachable():
+    with pytest.raises(ConnectionError):
+        await dump_registers("127.0.0.1", 1)

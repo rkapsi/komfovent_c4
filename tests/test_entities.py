@@ -8,14 +8,20 @@ from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_HVAC_ACTION,
     ATTR_TEMPERATURE,
-    DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_TEMPERATURE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     HVACAction,
     HVACMode,
 )
+from homeassistant.components.climate import (
+    DOMAIN as CLIMATE_DOMAIN,
+)
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from pymodbus import ModbusException
 
+from custom_components.komfovent_c4.const import DOMAIN
 from custom_components.komfovent_c4.registers import Register
 
 CLIMATE = "climate.komfovent_c4"
@@ -56,7 +62,9 @@ async def test_climate_reports_off_when_powered_down(
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
 
 
-async def test_set_temperature_writes_scaled_value(hass, setup_integration, mock_client):
+async def test_set_temperature_writes_scaled_value(
+    hass, setup_integration, mock_client
+):
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
@@ -147,7 +155,9 @@ async def test_alarm_bits_become_separate_binary_sensors(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("binary_sensor.komfovent_c4_service_required").state == STATE_ON
+    assert (
+        hass.states.get("binary_sensor.komfovent_c4_service_required").state == STATE_ON
+    )
     assert hass.states.get("binary_sensor.komfovent_c4_rotor_stopped").state == STATE_ON
     assert hass.states.get("binary_sensor.komfovent_c4_heater_off").state == STATE_OFF
 
@@ -168,7 +178,112 @@ async def test_water_temperature_reads_register_1205(hass, setup_integration):
     assert hass.states.get("sensor.komfovent_c4_water_temperature").state == "45.0"
 
 
+async def test_missing_sensor_reads_unknown(
+    hass, config_entry, mock_client, register_data
+):
+    """A unit without a water coil reports 0x7FFF on 1205, not a temperature."""
+    register_data[Register.WATER_TEMP] = 0x7FFF
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.komfovent_c4_water_temperature").state == "unknown"
+
+
 async def test_unload(hass, setup_integration):
     assert await hass.config_entries.async_unload(setup_integration.entry_id)
     await hass.async_block_till_done()
+    assert hass.states.get(CLIMATE).state == "unavailable"
+
+
+async def test_climate_hvac_action_branches(
+    hass, config_entry, mock_client, register_data
+):
+    """Cooling beats heating beats fan beats idle."""
+    register_data[Register.ELECTRIC_HEATER_LEVEL] = 0
+    register_data[Register.WATER_COOLING_LEVEL] = 40
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(CLIMATE).attributes[ATTR_HVAC_ACTION] == HVACAction.COOLING
+
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    register_data[Register.WATER_COOLING_LEVEL] = 0
+    await coordinator.async_refresh()
+    assert hass.states.get(CLIMATE).attributes[ATTR_HVAC_ACTION] == HVACAction.FAN
+
+    register_data[Register.AHU_FANS_STATUS] = 0
+    await coordinator.async_refresh()
+    assert hass.states.get(CLIMATE).attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
+
+
+async def test_climate_turn_on_off(hass, setup_integration, mock_client):
+    await hass.services.async_call(
+        CLIMATE_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: CLIMATE}, blocking=True
+    )
+    mock_client.write.assert_awaited_with(Register.POWER, 0)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: CLIMATE}, blocking=True
+    )
+    mock_client.write.assert_awaited_with(Register.POWER, 1)
+
+
+async def test_climate_unknown_fan_level_reads_none(
+    hass, config_entry, mock_client, register_data
+):
+    """1100 outside 1..3 is not a selectable level."""
+    register_data[Register.VENTILATION_LEVEL_MANUAL] = 4
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(CLIMATE).attributes[ATTR_FAN_MODE] is None
+
+
+async def test_select_reflects_register(hass, setup_integration):
+    assert hass.states.get("select.komfovent_c4_season").state == "winter"
+    assert hass.states.get("select.komfovent_c4_operation_mode").state == "manual"
+    assert hass.states.get("select.komfovent_c4_ventilation_level").state == "level_2"
+
+
+async def test_select_rejects_unknown_option(hass, setup_integration, mock_client):
+    mock_client.write.reset_mock()
+    with pytest.raises(Exception, match=r".*"):
+        await hass.services.async_call(
+            "select",
+            "select_option",
+            {ATTR_ENTITY_ID: "select.komfovent_c4_season", "option": "monsoon"},
+            blocking=True,
+        )
+    mock_client.write.assert_not_awaited()
+
+
+async def test_sync_clock_button_packs_bytes(
+    hass, setup_integration, mock_client, freezer
+):
+    """8:05 local on Saturday 9 May 2026 => 0x0805, 0x0509, 6, 2026."""
+    await hass.config.async_set_time_zone("UTC")
+    freezer.move_to("2026-05-09 08:05:00+00:00")
+    await hass.services.async_call(
+        "button",
+        "press",
+        {ATTR_ENTITY_ID: "button.komfovent_c4_sync_clock"},
+        blocking=True,
+    )
+
+    calls = [c.args for c in mock_client.write.await_args_list]
+    assert (Register.TIME, 0x0805) in calls
+    assert (Register.MONTH_DAY, 0x0509) in calls
+    assert (Register.DAY_OF_WEEK, 6) in calls
+    assert (Register.YEAR, 2026) in calls
+
+
+async def test_coordinator_marks_entities_unavailable_on_error(
+    hass, setup_integration, mock_client
+):
+    mock_client.read_block.side_effect = ModbusException("gateway gone")
+    coordinator = hass.data[DOMAIN][setup_integration.entry_id]
+    await coordinator.async_refresh()
+
     assert hass.states.get(CLIMATE).state == "unavailable"

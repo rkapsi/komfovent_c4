@@ -1,4 +1,5 @@
-"""Tests for the C4 register map itself.
+"""
+Tests for the C4 register map itself.
 
 These guard the transcription in ``registers.py`` against the PDF, and against
 the class of mistake where a typo silently turns one member into an alias of

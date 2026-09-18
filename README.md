@@ -16,10 +16,11 @@ integration instead.
 Written against the register map in [`docs/MODBUS_C4.pdf`](docs/MODBUS_C4.pdf)
 and documented in [`docs/MODBUS_C4.md`](docs/MODBUS_C4.md).
 
-The register addressing convention (the integration sends
-`documented number − 1` as the Modbus address) has been confirmed against a
-real C4 unit. The entity set in this rewrite has not yet been run against
-hardware.
+The register map and the addressing convention (the integration sends
+`documented number − 1` as the Modbus address) are confirmed against a real
+C4 unit; `tests/fixtures/C4_registers_mine.json` is a dump from it and the
+test suite runs against that dump. The entities have not yet been exercised
+in a live Home Assistant against the hardware.
 
 ## Installation
 
@@ -56,16 +57,28 @@ uv run ruff check . --fix
 uv run ty check
 ```
 
-`tests/test_registers.py` checks the register map transcription on its own and
-needs no Home Assistant runtime; the rest of the suite runs against a mocked
-Modbus client.
+Without `uv`, a plain virtualenv works the same way:
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install pytest-homeassistant-custom-component ruff ty
+.venv/bin/python -m pytest
+```
+
+`tests/test_registers.py` and `tests/test_modbus.py` check the register map
+and the client in isolation; `tests/test_entities.py` and
+`tests/test_config_flow.py` run the integration against a mocked client; and
+`tests/test_live_modbus.py` runs the real client over a socket against
+`scripts/modbus_server.py` serving both the synthetic and the real dump.
 
 ### Working without the hardware
 
-Dump every documented register from the real unit once:
+Dump every documented register from the real unit once. This needs only
+`pymodbus`, not a Home Assistant install, so it can run from any machine that
+can reach the unit:
 
 ```bash
-uv run python scripts/modbus_dump.py --host <unit-ip> --output tests/fixtures/C4_registers_mine.json
+python3 scripts/modbus_dump.py --host <unit-ip> --output tests/fixtures/C4_registers_mine.json
 ```
 
 Then serve that dump as a fake C4 and point the integration (or the live
@@ -73,7 +86,7 @@ tests) at it:
 
 ```bash
 uv run python scripts/modbus_server.py --input tests/fixtures/C4_registers_mine.json --port 5020
-uv run pytest tests/test_live_modbus.py -v --socket-enabled
+uv run pytest tests/test_live_modbus.py -v
 ```
 
 `tests/fixtures/C4_registers_synthetic.json` is a hand-written dump in the same

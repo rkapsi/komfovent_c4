@@ -55,9 +55,7 @@ class SyncClockButton(KomfoventC4Entity, ButtonEntity):
 
         # The documentation packs these as two bytes per register:
         # 8:05 => 0x0805 and 9 May => 0x0509.
-        await self.coordinator.client.write(
-            Register.TIME, (now.hour << 8) | now.minute
-        )
+        await self.coordinator.client.write(Register.TIME, (now.hour << 8) | now.minute)
         await self.coordinator.client.write(
             Register.MONTH_DAY, (now.month << 8) | now.day
         )

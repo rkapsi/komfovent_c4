@@ -5,11 +5,29 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, patch
 
 import pytest
+import pytest_socket
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.komfovent_c4.const import DOMAIN
 from custom_components.komfovent_c4.registers import Register
+
+
+@pytest.fixture(autouse=True)
+def _socket_per_marker(request: pytest.FixtureRequest):
+    """
+    Allow real sockets only for tests marked ``enable_socket``.
+
+    pytest-homeassistant-custom-component disables sockets globally; the live
+    tests need one to reach the simulator on localhost.
+    """
+    if request.node.get_closest_marker("enable_socket"):
+        pytest_socket.enable_socket()
+        yield
+        pytest_socket.disable_socket(allow_unix_socket=True)
+    else:
+        yield
+
 
 # A plausible running unit: powered on, winter, level 2, 20.0 C setpoint.
 DEFAULT_DATA: dict[Register, int] = {

@@ -17,6 +17,10 @@ OPT_UPDATE_INTERVAL: Final = "update_interval"
 DEFAULT_UPDATE_INTERVAL: Final = 30  # seconds
 
 # Setpoint bounds, register 1201 is documented as 0..300 (0.0-30.0 C)
+# A temperature register reads 0x7FFF when its sensor is not fitted; observed on
+# register 1205 (water temp) of a unit with an electric heater and no water coil.
+TEMP_NO_SENSOR: Final = 0x7FFF
+
 SETPOINT_MIN_TEMP: Final = 0.0
 SETPOINT_MAX_TEMP: Final = 30.0
 SETPOINT_STEP_TEMP: Final = 0.1

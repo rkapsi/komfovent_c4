@@ -19,6 +19,7 @@ from .const import (
     SETPOINT_MAX_TEMP,
     SETPOINT_MIN_TEMP,
     SETPOINT_STEP_TEMP,
+    TEMP_NO_SENSOR,
     VentilationLevel,
 )
 from .entity import KomfoventC4Entity
@@ -73,7 +74,9 @@ class KomfoventC4Climate(KomfoventC4Entity, ClimateEntity):
     def current_temperature(self) -> float | None:
         """Return the supply air temperature."""
         temp = self._value(Register.SUPPLY_AIR_TEMP)
-        return None if temp is None else temp / 10
+        if temp is None or temp == TEMP_NO_SENSOR:
+            return None
+        return temp / 10
 
     @property
     def target_temperature(self) -> float | None:
@@ -117,7 +120,9 @@ class KomfoventC4Climate(KomfoventC4Entity, ClimateEntity):
         not selectable options.
         """
         try:
-            return VentilationLevel(self._value(Register.VENTILATION_LEVEL_MANUAL)).name.lower()
+            return VentilationLevel(
+                self._value(Register.VENTILATION_LEVEL_MANUAL)
+            ).name.lower()
         except ValueError:
             return None
 

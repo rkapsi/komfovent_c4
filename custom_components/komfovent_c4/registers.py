@@ -14,7 +14,7 @@ Register numbers below are the 1-based numbers printed in the documentation.
 from __future__ import annotations
 
 from enum import Enum
-from typing import Final
+from typing import Final, Self
 
 
 class Access(Enum):
@@ -90,7 +90,7 @@ class Register(Enum):
     datatype: DataType
     access: Access
 
-    def __new__(cls, number: int, datatype: DataType, access: Access) -> Register:
+    def __new__(cls, number: int, datatype: DataType, access: Access) -> Self:
         """Build a register member, deriving the 0-based Modbus address."""
         obj = object.__new__(cls)
         obj._value_ = number

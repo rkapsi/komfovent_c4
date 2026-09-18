@@ -67,9 +67,7 @@ async def test_read_block_maps_words_to_registers(client):
 
     data = await client.read_block(Register.SUPPLY_AIR_TEMP, 6)
 
-    client.client.read_holding_registers.assert_awaited_once_with(
-        address=1199, count=6
-    )
+    client.client.read_holding_registers.assert_awaited_once_with(address=1199, count=6)
     assert data[Register.SUPPLY_AIR_TEMP] == 250
     assert data[Register.SETPOINT_TEMP] == 200
     assert data[Register.TEMP_CORRECTION] == -90
@@ -107,9 +105,7 @@ async def test_read_block_skips_undocumented_words(client):
 
 
 async def test_read_block_raises_on_error(client):
-    client.client.read_holding_registers = AsyncMock(
-        return_value=_response(error=True)
-    )
+    client.client.read_holding_registers = AsyncMock(return_value=_response(error=True))
 
     with pytest.raises(ModbusException):
         await client.read_block(Register.POWER, 14)

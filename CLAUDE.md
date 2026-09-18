@@ -24,9 +24,18 @@ uv run ruff check . --fix
 uv run ty check
 ```
 
+Without `uv`: `python3 -m venv .venv && .venv/bin/pip install
+pytest-homeassistant-custom-component ruff ty`, then `.venv/bin/python -m pytest`.
+
 `tests/test_registers.py` needs no Home Assistant runtime. The live tests in
-`tests/test_live_modbus.py` need `--socket-enabled` and run against
-`scripts/modbus_server.py`.
+`tests/test_live_modbus.py` are marked `enable_socket` and run against
+`scripts/modbus_server.py` serving `tests/fixtures/C4_registers_mine.json`
+(a real dump) and `C4_registers_synthetic.json`. `scripts/modbus_dump.py` must
+stay runnable with only pymodbus installed — that is why `dump.py` imports
+nothing from Home Assistant or the rest of the package.
+
+Temperature registers read `0x7FFF` when the sensor is not fitted
+(`TEMP_NO_SENSOR`); treat that as unknown, never as a temperature.
 
 ## Shape
 
