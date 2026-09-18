@@ -31,3 +31,5 @@ jobs:
       - uses: hacs/action@main
         with:
           category: integration
+          # komfovent_c4 has no entry in home-assistant/brands and does not need one.
+          ignore: brands

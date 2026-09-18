@@ -24,6 +24,21 @@ in a live Home Assistant against the hardware.
 
 ## Installation
 
+### HACS
+
+This is not in the HACS default store; add it as a custom repository:
+
+1. In HACS, open the menu (⋮) → **Custom repositories**.
+2. Repository: `https://github.com/rkapsi/komfovent_c4`, type: **Integration**.
+3. Find **Komfovent C4** in HACS, download it and restart Home Assistant.
+4. Add the integration from **Settings → Devices & services → Add integration**.
+
+HACS offers the latest GitHub release; pushing a `v*` tag publishes one (see
+`.github/workflows/release.yml`). With no releases it offers the default branch
+instead, and **Redownload** pulls whatever is on it — handy while developing.
+
+### Manual
+
 Copy `custom_components/komfovent_c4/` into your Home Assistant
 `config/custom_components/` directory and restart, then add the integration
 from **Settings → Devices & services**.

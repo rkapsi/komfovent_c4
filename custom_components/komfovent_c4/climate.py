@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -54,11 +54,10 @@ class KomfoventC4Climate(KomfoventC4Entity, ClimateEntity):
     _attr_target_temperature_step = SETPOINT_STEP_TEMP
     _attr_min_temp = SETPOINT_MIN_TEMP
     _attr_max_temp = SETPOINT_MAX_TEMP
-    _attr_hvac_modes: ClassVar[list[HVACMode]] = [HVACMode.OFF, HVACMode.HEAT_COOL]
-    _attr_fan_modes: ClassVar[list[str]] = [
-        level.name.lower() for level in VentilationLevel
-    ]
-    _attr_supported_features: ClassVar[ClimateEntityFeature] = (
+    # HA declares these as instance attributes, so ClassVar would break ty.
+    _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT_COOL]  # noqa: RUF012
+    _attr_fan_modes = [level.name.lower() for level in VentilationLevel]  # noqa: RUF012
+    _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.TURN_ON
