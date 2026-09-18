@@ -42,13 +42,15 @@ if TYPE_CHECKING:
 # entities say "supply" throughout. The keys keep the PDF's word because they
 # are unique IDs and must not change.
 INTENSITY_REGISTERS: tuple[tuple[Register, str, str], ...] = (
-    (Register.INTAKE_INTENSITY_1, "intake_intensity_1", "Supply intensity level 1"),
-    (Register.INTAKE_INTENSITY_2, "intake_intensity_2", "Supply intensity level 2"),
-    (Register.INTAKE_INTENSITY_3, "intake_intensity_3", "Supply intensity level 3"),
+    # The device page sorts by name, so leading with the level keeps each
+    # level's exhaust and supply pair together.
+    (Register.INTAKE_INTENSITY_1, "intake_intensity_1", "Level 1 supply intensity"),
+    (Register.EXHAUST_INTENSITY_1, "exhaust_intensity_1", "Level 1 exhaust intensity"),
+    (Register.INTAKE_INTENSITY_2, "intake_intensity_2", "Level 2 supply intensity"),
+    (Register.EXHAUST_INTENSITY_2, "exhaust_intensity_2", "Level 2 exhaust intensity"),
+    (Register.INTAKE_INTENSITY_3, "intake_intensity_3", "Level 3 supply intensity"),
+    (Register.EXHAUST_INTENSITY_3, "exhaust_intensity_3", "Level 3 exhaust intensity"),
     (Register.INTAKE_INTENSITY_4, "intake_intensity_4", "Boost supply intensity"),
-    (Register.EXHAUST_INTENSITY_1, "exhaust_intensity_1", "Exhaust intensity level 1"),
-    (Register.EXHAUST_INTENSITY_2, "exhaust_intensity_2", "Exhaust intensity level 2"),
-    (Register.EXHAUST_INTENSITY_3, "exhaust_intensity_3", "Exhaust intensity level 3"),
     (Register.EXHAUST_INTENSITY_4, "exhaust_intensity_4", "Boost exhaust intensity"),
 )
 
