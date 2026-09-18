@@ -28,6 +28,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.icon import async_get_icons
+from homeassistant.helpers.translation import async_get_translations
 from pymodbus import ModbusException
 from pytest_homeassistant_custom_component.common import async_capture_events
 
@@ -523,3 +524,17 @@ async def test_icons_json_is_loaded_and_keyed_by_existing_entities(
         for translation_key, icon in entities.items():
             assert (platform, translation_key) in keys, (platform, translation_key)
             assert icon["default"].startswith("mdi:")
+
+
+async def test_every_select_option_has_a_display_name(hass, setup_integration):
+    """Without a state translation the UI shows the raw key, e.g. "level_2"."""
+    translations = await async_get_translations(hass, "en", "entity", {DOMAIN})
+    registry = er.async_get(hass)
+    for entry in er.async_entries_for_config_entry(
+        registry, setup_integration.entry_id
+    ):
+        if entry.domain != "select":
+            continue
+        for option in hass.states.get(entry.entity_id).attributes["options"]:
+            key = f"component.{DOMAIN}.entity.select.{entry.translation_key}.state.{option}"
+            assert key in translations, key

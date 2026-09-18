@@ -66,7 +66,10 @@ button writes and the clock sensor reads in that zone, nowhere else.
   are flat tables of `(Register, EntityDescription)`; add entities there.
   Every entity's `translation_key` is its description `key`; `icons.json` is
   keyed by it, so give a new entity an icon there too (the test checks keys
-  match, nothing checks the MDI name exists).
+  match, nothing checks the MDI name exists). Select options and climate fan
+  modes need a state translation in `strings.json` or the UI shows the raw
+  key (`level_2`); a test enforces this for selects. Keep `translations/en.json`
+  identical to `strings.json`.
 - Alarm registers 1007/1008 are bitfields. Never coerce them to 0/1.
 - Entity wording is "supply" and "exhaust" everywhere, even where the PDF says
   "intake" (1103-1106). Description keys are unique IDs: never rename them,

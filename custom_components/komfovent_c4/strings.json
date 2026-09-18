@@ -49,10 +49,36 @@
   },
   "entity": {
     "select": {
+      "ventilation_level": {
+        "state": {
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3"
+        }
+      },
       "operation_mode": {
         "state": {
           "manual": "Manual",
           "auto": "Weekly schedule"
+        }
+      },
+      "season": {
+        "state": {
+          "summer": "Summer",
+          "winter": "Winter"
+        }
+      }
+    },
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "level_1": "Level 1",
+              "level_2": "Level 2",
+              "level_3": "Level 3"
+            }
+          }
         }
       }
     }
