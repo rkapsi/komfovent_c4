@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Komfovent C4",
-        "description": "Connect to a Komfovent DOMEKT unit with a C4 controller over Modbus TCP.",
+        "description": "Connect to a Komfovent DOMEKT unit with a C4 controller through its Ping2 gateway (or another RS-485-to-Modbus-TCP bridge).",
         "data": {
           "name": "Name",
           "host": "Host",
@@ -11,7 +11,7 @@
           "time_zone": "Time zone"
         },
         "data_description": {
-          "host": "IP address of the unit, or of the Ping gateway in front of it.",
+          "host": "IP address of the Ping2 gateway, or of whatever bridge sits in front of the unit.",
           "port": "Modbus TCP port. The documented default is 502.",
           "time_zone": "The zone the controller's clock is kept in. Only change this if the unit is not where Home Assistant is."
         }
@@ -42,7 +42,7 @@
           "update_interval": "Update interval"
         },
         "data_description": {
-          "update_interval": "How often to poll the unit. The C4 is often reached over a serial bridge, so short intervals may be unreliable."
+          "update_interval": "How often to poll the unit. Every read crosses the gateway's 19200-baud serial link, so very short intervals gain little."
         }
       }
     }

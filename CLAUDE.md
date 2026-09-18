@@ -4,6 +4,11 @@ Home Assistant custom integration for Komfovent DOMEKT units with the **C4**
 controller, over Modbus TCP. C4 only — the C6/C6M/C8 controllers are covered by
 the separate lnagel/hass-komfovent project and are deliberately out of scope.
 
+The C4 has no Ethernet; it is Modbus RTU over RS-485 (19200 8E1). Modbus TCP
+always goes through a bridge — Komfovent's Ping2 gateway in practice — so
+"the unit" on the wire is really the gateway. Write docs and UI text
+accordingly.
+
 ## Source of truth
 
 `docs/MODBUS_C4.pdf` is the only primary source. `docs/MODBUS_C4.md` is its
@@ -83,7 +88,7 @@ else (`pyproject.toml` declares it dynamic). Bump it, commit, tag `v<version>`;
   needed.
 - The coordinator polls exactly `POLL_BLOCKS` — three block reads per cycle.
   Never read registers one at a time in the poll loop; the unit is often
-  behind a 19200-baud serial bridge.
+  behind the 19200-baud serial link of the gateway.
 - `entity.py` holds the one base class every platform subclasses. Platforms
   are flat tables of `(Register, EntityDescription)`; add entities there.
   Every entity's `translation_key` is its description `key`; `icons.json` is

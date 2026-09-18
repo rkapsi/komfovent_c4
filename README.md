@@ -3,6 +3,12 @@
 A Home Assistant integration for Komfovent DOMEKT air handling units with the
 **C4** controller, over Modbus TCP.
 
+Unlike the C6 and later, the C4 has no Ethernet port of its own: it speaks
+Modbus RTU over RS-485 only. Modbus TCP reaches it through Komfovent's
+**Ping2** gateway (the Ethernet adapter sold for the C4), or through any
+generic RS-485-to-Modbus-TCP bridge configured for 19200 baud, 8 data bits,
+even parity, 1 stop bit. This integration talks to that gateway.
+
 This is a separate integration from
 [lnagel/hass-komfovent](https://github.com/lnagel/hass-komfovent), which covers
 the newer C6, C6M and C8 controllers. The C4 is a 2013-era controller that
@@ -18,9 +24,10 @@ and documented in [`docs/MODBUS_C4.md`](docs/MODBUS_C4.md).
 
 The register map and the addressing convention (the integration sends
 `documented number − 1` as the Modbus address) are confirmed against a real
-C4 unit; `tests/fixtures/C4_registers_mine.json` is a dump from it and the
-test suite runs against that dump. The entities have not yet been exercised
-in a live Home Assistant against the hardware.
+C4 unit behind a Ping2; `tests/fixtures/C4_registers_mine.json` is a dump
+from it and the test suite runs against that dump. The integration runs in
+daily use on that unit; the timing quirks it works around are recorded under
+"Observed on hardware" in `docs/MODBUS_C4.md`.
 
 ## Installation
 
@@ -43,8 +50,9 @@ Copy `custom_components/komfovent_c4/` into your Home Assistant
 `config/custom_components/` directory and restart, then add the integration
 from **Settings → Devices & services**.
 
-You will need the IP address of the unit — or of the Komfovent "Ping" gateway
-in front of it — and the Modbus TCP port, which the documentation gives as 502.
+You will need the IP address of the Ping2 gateway (or whatever bridge sits
+in front of the unit) and its Modbus TCP port, which the documentation gives
+as 502.
 
 The form also asks for the time zone the controller's clock is kept in. It
 defaults to Home Assistant's own zone, which is right unless the unit is

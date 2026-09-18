@@ -16,9 +16,11 @@ That PDF is the only primary source for this integration.
 The documentation notes that runs longer than 10 m need a ground wire in
 addition to A and B, and that long runs want line termination resistors.
 
-DOMEKT units reach Modbus either directly over RS-485 (RJ-45 socket, pins 4/5/6
-= A/B/GND) or over Ethernet through a Komfovent "Ping" gateway. With a C4 PLUS
-panel the gateway sits between the panel and the unit.
+The C4 itself only has the RS-485 port (RJ-45 socket, pins 4/5/6 = A/B/GND)
+and speaks Modbus RTU with the serial settings above. It has no Ethernet; the
+TCP port in the table belongs to Komfovent's "Ping" gateway (Ping2 for the
+C4), which bridges RTU to Modbus TCP and is what this integration connects
+to. With a C4 PLUS panel the gateway sits between the panel and the unit.
 
 ## Register numbering
 
