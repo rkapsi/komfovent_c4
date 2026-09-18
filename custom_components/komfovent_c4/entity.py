@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 from typing import TYPE_CHECKING
 
 from homeassistant.const import CONF_HOST
@@ -28,6 +29,27 @@ def build_device_info(coordinator: KomfoventC4Coordinator) -> DeviceInfo:
     )
 
 
+# Entities that only carry information when a water coil is fitted; keyed by
+# description key so each platform can look its own up.
+WATER_COIL_KEYS: frozenset[str] = frozenset(
+    {
+        "water_temperature",
+        "water_heating_level",
+        "water_cooling_level",
+        "stop_water_temp_low",
+    }
+)
+
+
+def for_hardware[D: EntityDescription](
+    coordinator: KomfoventC4Coordinator, description: D
+) -> D:
+    """Return the description, disabled by default if its hardware is absent."""
+    if description.key in WATER_COIL_KEYS and not coordinator.water_coil_fitted:
+        return dataclasses.replace(description, entity_registry_enabled_default=False)
+    return description
+
+
 class KomfoventC4Entity(CoordinatorEntity["KomfoventC4Coordinator"]):
     """Base entity wired to a single register."""
 
@@ -43,7 +65,7 @@ class KomfoventC4Entity(CoordinatorEntity["KomfoventC4Coordinator"]):
         """Initialize the entity."""
         super().__init__(coordinator)
         self.register = register
-        self.entity_description = entity_description
+        self.entity_description = for_hardware(coordinator, entity_description)
         self._attr_unique_id = (
             f"{coordinator.config_entry.entry_id}_{entity_description.key}"
         )

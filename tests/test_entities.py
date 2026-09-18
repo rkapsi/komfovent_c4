@@ -198,13 +198,49 @@ async def test_water_temperature_reads_register_1205(hass, setup_integration):
 async def test_missing_sensor_reads_unknown(
     hass, config_entry, mock_client, register_data
 ):
-    """A unit without a water coil reports 0x7FFF on 1205, not a temperature."""
+    """0x7FFF on a temperature register is "no sensor", not a temperature."""
+    register_data[Register.SUPPLY_AIR_TEMP] = 0x7FFF
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("sensor.komfovent_c4_supply_air_temperature").state == "unknown"
+    )
+
+
+WATER_COIL_ENTITIES = (
+    "sensor.komfovent_c4_water_temperature",
+    "sensor.komfovent_c4_water_heating_level",
+    "sensor.komfovent_c4_water_cooling_level",
+    "binary_sensor.komfovent_c4_water_temperature_low",
+)
+
+
+async def test_water_coil_entities_disabled_without_the_coil(
+    hass, config_entry, mock_client, register_data
+):
+    """A unit without a water coil reports 0x7FFF on 1205: hide the coil's entities."""
     register_data[Register.WATER_TEMP] = 0x7FFF
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.komfovent_c4_water_temperature").state == "unknown"
+    registry = er.async_get(hass)
+    for entity_id in WATER_COIL_ENTITIES:
+        entry = registry.async_get(entity_id)
+        assert entry is not None, entity_id
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION, entity_id
+        assert hass.states.get(entity_id) is None, entity_id
+    # Everything else is untouched.
+    assert hass.states.get("sensor.komfovent_c4_electric_heater_level").state == "25"
+
+
+async def test_water_coil_entities_enabled_with_the_coil(hass, setup_integration):
+    registry = er.async_get(hass)
+    for entity_id in WATER_COIL_ENTITIES:
+        assert registry.async_get(entity_id).disabled_by is None, entity_id
+        assert hass.states.get(entity_id) is not None, entity_id
 
 
 async def test_clock_sensor_assembles_local_datetime(hass, setup_integration):

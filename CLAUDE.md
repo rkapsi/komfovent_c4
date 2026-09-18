@@ -35,7 +35,10 @@ stay runnable with only pymodbus installed — that is why `dump.py` imports
 nothing from Home Assistant or the rest of the package.
 
 Temperature registers read `0x7FFF` when the sensor is not fitted
-(`TEMP_NO_SENSOR`); treat that as unknown, never as a temperature.
+(`TEMP_NO_SENSOR`); treat that as unknown, never as a temperature. 1205
+reading that means no water coil: `coordinator.water_coil_fitted` is False
+and entities listed in `WATER_COIL_KEYS` (`entity.py`) are created disabled
+by default. There is no such signal for the electric heater.
 
 All writes go through `KomfoventC4Coordinator.async_write`, never
 `client.write` from an entity. The controller acks writes before applying them

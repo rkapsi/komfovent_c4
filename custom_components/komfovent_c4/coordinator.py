@@ -22,6 +22,7 @@ from .const import (
     SCHEDULE_COUNT,
     SCHEDULE_FIRST,
     SCHEDULE_SLOTS,
+    TEMP_NO_SENSOR,
     WRITE_SETTLE_SECONDS,
 )
 from .modbus import KomfoventC4Client
@@ -61,6 +62,20 @@ class KomfoventC4Coordinator(TimestampDataUpdateCoordinator[dict[Register, int]]
             port=config_entry.data[CONF_PORT],
         )
         self._cancel_settle: Callable[[], None] | None = None
+
+    @property
+    def water_coil_fitted(self) -> bool:
+        """
+        Return whether the unit has a water heater/cooler.
+
+        The water temperature sensor comes with the coil; 1205 reads
+        ``TEMP_NO_SENSOR`` without it. Entities that only mean something with
+        a coil are created disabled when this is False, so they do not clutter
+        the device page with permanent zeros; they can be enabled by hand.
+        """
+        if not self.data:
+            return True
+        return self.data.get(Register.WATER_TEMP) != TEMP_NO_SENSOR
 
     @property
     def time_zone(self) -> tzinfo:

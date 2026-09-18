@@ -62,6 +62,19 @@ somewhere else; the clock sensor and the sync-clock button both use it.
 | Number | Intake and exhaust intensity for levels 1–3 and for boost (level 4), boost duration, temperature correction |
 | Button | Sync clock — writes Home Assistant's local time to the controller |
 
+### Optional hardware
+
+A C4 without a water coil reports "no sensor" on the water temperature
+register, so the water temperature, water heating and cooling levels and the
+"water temperature low" flag are created **disabled** on such units. They sit
+in the entity list and can be enabled by hand should that ever be wrong.
+
+Nothing in the register map says whether an electric heater is fitted, so its
+level sensor is always enabled; disable it from the entity's settings dialog
+if your unit has none. Disabling entities changes only what Home Assistant
+shows — the registers arrive in the same three block reads either way, so it
+does not reduce Modbus traffic.
+
 ## Scheduling
 
 The C4 has its own weekly schedule (three time slots per day, registers
