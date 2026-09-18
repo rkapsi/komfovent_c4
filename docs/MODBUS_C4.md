@@ -153,6 +153,10 @@ Measured on the same unit:
   immediate read-back of 1000 therefore returns the *old* state. The
   integration keeps its written value and defers the next read by
   `WRITE_SETTLE_SECONDS`.
+- OVR (1111): writing 1 switches to level 4 within ~400 ms — 1101 reads 4,
+  1115/1116 jump to the level-4 intensities (1106/1110) and 1113 starts at
+  the value of 1112. Writing 0 **cancels immediately**; the unit returns to
+  the previous level within ~400 ms. It does not run out the timer.
 - The setpoint is stored in **0.2 °C steps**: odd tenths are truncated
   (213 ⇒ 212, 219 ⇒ 218, 211 ⇒ 210). The PDF's "0…300" range is real but not
   every value in it is representable.
