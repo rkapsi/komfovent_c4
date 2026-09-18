@@ -121,6 +121,14 @@ class OperationModeSelect(KomfoventC4Select):
             option == OperationMode.AUTO.name.lower()
             and not await self.coordinator.async_schedule_runs_anything()
         ):
+            # The dropdown shows the refused option until a state event
+            # arrives, and with the state unchanged none would until the next
+            # poll. Force one so it snaps back at once.
+            self._attr_force_update = True
+            try:
+                self.async_write_ha_state()
+            finally:
+                self._attr_force_update = False
             raise ServiceValidationError(
                 translation_domain=DOMAIN, translation_key="schedule_empty"
             )

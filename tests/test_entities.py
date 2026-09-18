@@ -18,11 +18,18 @@ from homeassistant.components.climate import (
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_TIME_ZONE, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_TIME_ZONE,
+    EVENT_STATE_CHANGED,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.icon import async_get_icons
 from pymodbus import ModbusException
+from pytest_homeassistant_custom_component.common import async_capture_events
 
 from custom_components.komfovent_c4.const import DOMAIN, SCHEDULE_COUNT, SCHEDULE_SLOTS
 from custom_components.komfovent_c4.registers import Register
@@ -380,6 +387,25 @@ async def test_operation_mode_refuses_auto_with_empty_schedule(
     mock_client.read_words.assert_awaited_once_with(1300, SCHEDULE_COUNT)
     mock_client.write.assert_not_awaited()
     assert hass.states.get(OPERATION_MODE).state == "manual"
+
+
+async def test_refused_auto_forces_a_state_event_so_the_ui_snaps_back(
+    hass, setup_integration
+):
+    """Unchanged state means no event, and the UI would show AUTO until the next poll."""
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
+
+    with pytest.raises(ServiceValidationError):
+        await _select(hass, OPERATION_MODE, "auto")
+    await hass.async_block_till_done()
+
+    ours = [e for e in events if e.data["entity_id"] == OPERATION_MODE]
+    assert len(ours) == 1
+    assert hass.states.get(OPERATION_MODE).state == "manual"
+    # And it was a one-off: a normal poll with the same value stays quiet.
+    await hass.data[DOMAIN][setup_integration.entry_id].async_refresh()
+    await hass.async_block_till_done()
+    assert len([e for e in events if e.data["entity_id"] == OPERATION_MODE]) == 1
 
 
 @pytest.mark.parametrize(
