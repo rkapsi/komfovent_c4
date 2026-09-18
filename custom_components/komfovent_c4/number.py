@@ -37,11 +37,15 @@ if TYPE_CHECKING:
 
 # Level 4 cannot be selected through 1100; it is the preset the OVR ("boost")
 # switch runs, so it is named after that rather than by number.
+#
+# The PDF says "intake" for these and "supply" for the fan level sensors; the
+# entities say "supply" throughout. The keys keep the PDF's word because they
+# are unique IDs and must not change.
 INTENSITY_REGISTERS: tuple[tuple[Register, str, str], ...] = (
-    (Register.INTAKE_INTENSITY_1, "intake_intensity_1", "Intake intensity level 1"),
-    (Register.INTAKE_INTENSITY_2, "intake_intensity_2", "Intake intensity level 2"),
-    (Register.INTAKE_INTENSITY_3, "intake_intensity_3", "Intake intensity level 3"),
-    (Register.INTAKE_INTENSITY_4, "intake_intensity_4", "Boost intake intensity"),
+    (Register.INTAKE_INTENSITY_1, "intake_intensity_1", "Supply intensity level 1"),
+    (Register.INTAKE_INTENSITY_2, "intake_intensity_2", "Supply intensity level 2"),
+    (Register.INTAKE_INTENSITY_3, "intake_intensity_3", "Supply intensity level 3"),
+    (Register.INTAKE_INTENSITY_4, "intake_intensity_4", "Boost supply intensity"),
     (Register.EXHAUST_INTENSITY_1, "exhaust_intensity_1", "Exhaust intensity level 1"),
     (Register.EXHAUST_INTENSITY_2, "exhaust_intensity_2", "Exhaust intensity level 2"),
     (Register.EXHAUST_INTENSITY_3, "exhaust_intensity_3", "Exhaust intensity level 3"),

@@ -68,6 +68,9 @@ button writes and the clock sensor reads in that zone, nowhere else.
   keyed by it, so give a new entity an icon there too (the test checks keys
   match, nothing checks the MDI name exists).
 - Alarm registers 1007/1008 are bitfields. Never coerce them to 0/1.
+- Entity wording is "supply" and "exhaust" everywhere, even where the PDF says
+  "intake" (1103-1106). Description keys are unique IDs: never rename them,
+  only the displayed name.
 - The weekly schedule (1300-1362) is documented, dumped by diagnostics, but
   not polled and has no entities or `Register` members. That is a decision,
   not an omission: scheduling lives in HA's Schedule helper (README). The only

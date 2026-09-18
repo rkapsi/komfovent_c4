@@ -59,7 +59,7 @@ somewhere else; the clock sensor and the sync-clock button both use it.
 | Binary sensor | Fans running, plus one entity per documented warning and stop flag |
 | Switch | Power, boost |
 | Select | Ventilation level, operation mode (manual / weekly schedule), season |
-| Number | Intake and exhaust intensity for levels 1–3 and for boost (level 4), boost duration, temperature correction |
+| Number | Supply and exhaust intensity for levels 1–3 and for boost (level 4), boost duration, temperature correction |
 | Button | Sync clock — writes Home Assistant's local time to the controller |
 
 ### Optional hardware
