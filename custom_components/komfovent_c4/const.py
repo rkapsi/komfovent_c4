@@ -21,9 +21,15 @@ DEFAULT_UPDATE_INTERVAL: Final = 30  # seconds
 # register 1205 (water temp) of a unit with an electric heater and no water coil.
 TEMP_NO_SENSOR: Final = 0x7FFF
 
+# A write is acknowledged before the controller applies it: POWER (1000) takes
+# about a second to read back the new value, so reading immediately after a
+# write returns the old state. Polls within this window are skipped and a
+# refresh runs once it has passed.
+WRITE_SETTLE_SECONDS: Final = 2.0
+
 SETPOINT_MIN_TEMP: Final = 0.0
 SETPOINT_MAX_TEMP: Final = 30.0
-SETPOINT_STEP_TEMP: Final = 0.1
+SETPOINT_STEP_TEMP: Final = 0.2  # the C4 truncates odd tenths, 21.3 => 21.2
 
 # Temperature correction, register 1202 is documented as -90..+90 (-9.0-+9.0 C)
 CORRECTION_MIN_TEMP: Final = -9.0

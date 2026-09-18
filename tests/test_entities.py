@@ -72,7 +72,21 @@ async def test_set_temperature_writes_scaled_value(
         blocking=True,
     )
 
-    mock_client.write.assert_awaited_with(Register.SETPOINT_TEMP, 215)
+    # 21.5 is not representable; the nearest even tenth wins.
+    mock_client.write.assert_awaited_with(Register.SETPOINT_TEMP, 216)
+
+
+async def test_set_temperature_rounds_to_even_tenths(
+    hass, setup_integration, mock_client
+):
+    """The C4 keeps the setpoint in 0.2 C steps; 21.3 must not be sent as 213."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: CLIMATE, ATTR_TEMPERATURE: 21.3},
+        blocking=True,
+    )
+    mock_client.write.assert_awaited_with(Register.SETPOINT_TEMP, 212)
 
 
 async def test_set_temperature_out_of_bounds_is_ignored(

@@ -62,5 +62,4 @@ class KomfoventC4Entity(CoordinatorEntity["KomfoventC4Coordinator"]):
         if self.register is None:
             msg = f"{self.entity_id} has no register to write"
             raise ValueError(msg)
-        await self.coordinator.client.write(self.register, value)
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_write(self.register, value)

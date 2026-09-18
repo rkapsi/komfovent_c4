@@ -140,8 +140,9 @@ class KomfoventC4Climate(KomfoventC4Entity, ClimateEntity):
             )
             return
 
-        await self.coordinator.client.write(Register.SETPOINT_TEMP, int(temp * 10))
-        await self.coordinator.async_request_refresh()
+        # The controller keeps the setpoint in 0.2 C steps and truncates odd
+        # tenths (21.3 => 21.2), so round to the nearest even tenth ourselves.
+        await self.coordinator.async_write(Register.SETPOINT_TEMP, round(temp * 5) * 2)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the manual ventilation level."""
@@ -151,17 +152,15 @@ class KomfoventC4Climate(KomfoventC4Entity, ClimateEntity):
             _LOGGER.warning("Invalid ventilation level: %s", fan_mode)
             return
 
-        await self.coordinator.client.write(
+        await self.coordinator.async_write(
             Register.VENTILATION_LEVEL_MANUAL, level.value
         )
-        await self.coordinator.async_request_refresh()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Start or stop the unit."""
-        await self.coordinator.client.write(
+        await self.coordinator.async_write(
             Register.POWER, 0 if hvac_mode == HVACMode.OFF else 1
         )
-        await self.coordinator.async_request_refresh()
 
     async def async_turn_on(self) -> None:
         """Start the unit."""

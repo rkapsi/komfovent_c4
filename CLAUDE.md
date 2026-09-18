@@ -37,6 +37,15 @@ nothing from Home Assistant or the rest of the package.
 Temperature registers read `0x7FFF` when the sensor is not fitted
 (`TEMP_NO_SENSOR`); treat that as unknown, never as a temperature.
 
+All writes go through `KomfoventC4Coordinator.async_write`, never
+`client.write` from an entity. The controller acks writes before applying them
+(POWER takes ~1 s to read back), so `async_write` updates the cache
+optimistically and defers the read by `WRITE_SETTLE_SECONDS`; reading straight
+back flips the entity to the stale value. Measured behaviour is recorded under
+"Observed on hardware" in `docs/MODBUS_C4.md` — add to it when you learn more.
+
+The setpoint (1201) only holds even tenths of a degree; round before writing.
+
 ## Shape
 
 - One `Register` enum carrying `(number, datatype, access)`. All C4 registers

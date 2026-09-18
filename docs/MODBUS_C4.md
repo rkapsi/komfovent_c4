@@ -142,6 +142,21 @@ Points worth knowing that the PDF does not state:
 - 1300–1362 were all zero: an unused schedule reads as `0x0000` rather than
   as a default programme.
 
+### Write behaviour
+
+Measured on the same unit:
+
+- A write is acknowledged in ~70 ms, before the controller applies it.
+- 1201 (setpoint) reads back the new value on the first read after the ack.
+- 1000 (power) takes about **1 s** to read back the new value; 1114 (fans
+  status) and 1115/1116 (fan levels) change within ~250 ms of the write. An
+  immediate read-back of 1000 therefore returns the *old* state. The
+  integration keeps its written value and defers the next read by
+  `WRITE_SETTLE_SECONDS`.
+- The setpoint is stored in **0.2 °C steps**: odd tenths are truncated
+  (213 ⇒ 212, 219 ⇒ 218, 211 ⇒ 210). The PDF's "0…300" range is real but not
+  every value in it is representable.
+
 ## What the C4 does not have
 
 Worth stating explicitly, because it explains why this integration is small and
