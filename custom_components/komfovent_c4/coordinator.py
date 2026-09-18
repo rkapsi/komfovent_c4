@@ -16,7 +16,14 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.util import dt as dt_util
 from pymodbus.exceptions import ModbusException
 
-from .const import DEFAULT_UPDATE_INTERVAL, DOMAIN, WRITE_SETTLE_SECONDS
+from .const import (
+    DEFAULT_UPDATE_INTERVAL,
+    DOMAIN,
+    SCHEDULE_COUNT,
+    SCHEDULE_FIRST,
+    SCHEDULE_SLOTS,
+    WRITE_SETTLE_SECONDS,
+)
 from .modbus import KomfoventC4Client
 from .registers import POLL_BLOCKS, Register
 
@@ -98,6 +105,21 @@ class KomfoventC4Coordinator(TimestampDataUpdateCoordinator[dict[Register, int]]
             self._cancel_settle()
         self._cancel_settle = async_call_later(
             self.hass, WRITE_SETTLE_SECONDS, self._async_settled
+        )
+
+    async def async_schedule_runs_anything(self) -> bool:
+        """
+        Return whether the unit's own weekly schedule has any active slot.
+
+        A slot counts only if it has a level and a positive duration; an empty
+        schedule under AUTO mode keeps the unit off, so callers use this to
+        refuse the switch. The 63 words are read on demand, never polled.
+        """
+        words = await self.client.read_words(SCHEDULE_FIRST, SCHEDULE_COUNT)
+        times, levels = words[: 2 * SCHEDULE_SLOTS], words[2 * SCHEDULE_SLOTS :]
+        return any(
+            level and stop > start
+            for start, stop, level in zip(times[::2], times[1::2], levels, strict=True)
         )
 
     async def _async_settled(self, _now: datetime) -> None:

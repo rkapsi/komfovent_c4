@@ -9,7 +9,7 @@ import pytest_socket
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.komfovent_c4.const import DOMAIN
+from custom_components.komfovent_c4.const import DOMAIN, SCHEDULE_COUNT
 from custom_components.komfovent_c4.registers import Register
 
 
@@ -117,6 +117,8 @@ def mock_client(register_data):
             }
 
         client.read_block = AsyncMock(side_effect=read_block)
+        # The schedule block has no Register members; default to an empty one.
+        client.read_words = AsyncMock(return_value=[0] * SCHEDULE_COUNT)
         yield client
 
 

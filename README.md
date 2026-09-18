@@ -58,12 +58,48 @@ somewhere else; the clock sensor and the sync-clock button both use it.
 | Sensor | Supply air and water temperature, recuperator / electric heater / water heating / water cooling levels, supply and exhaust fan levels, current ventilation level, boost time remaining, stop reason, the controller's clock |
 | Binary sensor | Fans running, plus one entity per documented warning and stop flag |
 | Switch | Power, boost |
-| Select | Ventilation level, operation mode (manual/auto), season |
+| Select | Ventilation level, operation mode (manual / unit's weekly schedule), season |
 | Number | Intake and exhaust intensity for levels 1–3 and for boost (level 4), boost duration, temperature correction |
 | Button | Sync clock — writes Home Assistant's local time to the controller |
 
-The weekly schedule (registers 1300–1362) is deliberately not implemented; see
-the notes in `docs/MODBUS_C4.md`.
+## Scheduling
+
+The C4 has its own weekly schedule (three time slots per day, registers
+1300–1362) that runs when the operation mode is set to *Unit's weekly
+schedule*. This integration deliberately does not edit it: Home Assistant's
+built-in **Schedule** helper is a far better editor, and it isn't limited to
+three slots a day.
+
+Keep the operation mode on *Manual* and let Home Assistant drive the level:
+
+1. Settings → Devices & services → Helpers → Create helper → **Schedule**.
+   Paint the weekly grid; give each block a data field `level` with the value
+   `level_1`, `level_2` or `level_3`. Leave gaps where the unit should run at
+   its base level.
+2. One automation applies it:
+
+   ```yaml
+   alias: Ventilation schedule
+   triggers:
+     - trigger: state
+       entity_id: schedule.ventilation
+   actions:
+     - action: select.select_option
+       target:
+         entity_id: select.komfovent_c4_ventilation_level
+       data:
+         option: >-
+           {{ state_attr('schedule.ventilation', 'level') or 'level_1' }}
+   ```
+
+   The `or 'level_1'` is the level used outside every block. Replace the
+   select with `switch.komfovent_c4_power` if you would rather switch the unit
+   off outright.
+
+Because the unit's own schedule is normally empty in this setup, and an empty
+schedule under *Unit's weekly schedule* keeps the unit **off**, the operation
+mode select refuses to switch to it while nothing is programmed on the unit.
+The schedule registers are read only at that moment; they are never polled.
 
 ## Development
 

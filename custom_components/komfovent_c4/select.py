@@ -6,6 +6,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.exceptions import ServiceValidationError
 
 from .const import DOMAIN, OperationMode, Season, VentilationLevel
 from .entity import KomfoventC4Entity
@@ -61,7 +62,11 @@ async def async_setup_entry(
     """Set up the Komfovent C4 selects."""
     coordinator: KomfoventC4Coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        KomfoventC4Select(coordinator, description, register, enum_class)
+        (
+            OperationModeSelect
+            if register is Register.OPERATION_MODE
+            else KomfoventC4Select
+        )(coordinator, description, register, enum_class)
         for register, enum_class, description in SELECTS
     )
 
@@ -99,3 +104,24 @@ class KomfoventC4Select(KomfoventC4Entity, SelectEntity):
             _LOGGER.warning("Invalid option for %s: %s", self.entity_id, option)
             return
         await self.async_write(member.value)
+
+
+class OperationModeSelect(KomfoventC4Select):
+    """
+    Register 1102: manual level, or the unit's own weekly schedule.
+
+    Scheduling is expected to live in Home Assistant (see the README), so the
+    unit's schedule is normally empty — and under AUTO an empty schedule means
+    the unit stays off. Refuse that switch rather than let it look like a fault.
+    """
+
+    async def async_select_option(self, option: str) -> None:
+        """Write the mode, refusing AUTO while the unit's schedule is empty."""
+        if (
+            option == OperationMode.AUTO.name.lower()
+            and not await self.coordinator.async_schedule_runs_anything()
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="schedule_empty"
+            )
+        await super().async_select_option(option)

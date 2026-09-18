@@ -117,12 +117,17 @@ integration reports such a sensor as unknown rather than as 3276.7 °C.
 Three start/stop time pairs per weekday at 1300–1341 (`0x0000`…`0x1800`,
 i.e. 0:00–24:00), then one ventilation level per slot at 1342–1362 (0…3).
 
-**Not implemented.** These 63 registers are not polled and no entities are
-exposed for them. The weekly schedule is configured on the unit's own panel;
-mirroring it into Home Assistant would roughly double the size of this
-integration for something that is set once. Register 1102 switches between
-following that schedule (auto) and ignoring it (manual), which covers the
-common case.
+Layout, confirmed by the synthetic fixture and the real dump: 1300–1341 are
+day-major, Monday first, `start, stop` for slot 1, 2, 3 of each day; 1342–1362
+are the matching levels in the same order.
+
+**Not editable from here.** These 63 registers are not polled and no entities
+are exposed for them; scheduling is meant to live in Home Assistant's own
+Schedule helper driving the manual level (see the README). The block is read
+once, on demand, when register 1102 is switched to auto: a slot only counts
+if its level is non-zero and its stop is after its start, and if no slot
+counts the switch is refused, because an empty schedule under auto keeps the
+unit off.
 
 ## Observed on hardware
 

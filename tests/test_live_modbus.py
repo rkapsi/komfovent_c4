@@ -19,7 +19,7 @@ import pytest
 from homeassistant.const import CONF_HOST, CONF_PORT
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.komfovent_c4.const import DOMAIN
+from custom_components.komfovent_c4.const import DOMAIN, SCHEDULE_COUNT, SCHEDULE_FIRST
 from custom_components.komfovent_c4.coordinator import KomfoventC4Coordinator
 from custom_components.komfovent_c4.dump import dump_registers
 from custom_components.komfovent_c4.modbus import KomfoventC4Client
@@ -89,6 +89,19 @@ async def test_client_reads_every_poll_block(simulator, register_dump):
         )
     finally:
         client.close()
+
+
+@pytest.mark.enable_socket
+async def test_client_reads_schedule_words_raw(simulator, register_dump):
+    """The schedule has no Register members; it comes back as raw words."""
+    client = KomfoventC4Client("127.0.0.1", simulator)
+    try:
+        assert await client.connect()
+        words = await client.read_words(SCHEDULE_FIRST, SCHEDULE_COUNT)
+    finally:
+        client.close()
+
+    assert words == register_dump[str(SCHEDULE_FIRST)]
 
 
 @pytest.mark.enable_socket

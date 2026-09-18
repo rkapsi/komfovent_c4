@@ -52,6 +52,23 @@ class KomfoventC4Client:
         """Close the connection."""
         self.client.close()
 
+    async def read_words(self, number: int, count: int) -> list[int]:
+        """
+        Read ``count`` raw words starting at documented register ``number``.
+
+        The words are returned undecoded, in wire order. This is for the parts
+        of the map without ``Register`` members, i.e. the weekly schedule.
+        """
+        async with self._lock:
+            result = await self.client.read_holding_registers(
+                address=number - 1, count=count
+            )
+
+        if result.isError():
+            msg = f"Error reading {count} registers from {number}"
+            raise ModbusException(msg)
+        return list(result.registers)
+
     async def read_block(self, start: Register, count: int) -> dict[Register, int]:
         """
         Read ``count`` consecutive registers in a single transaction.
@@ -59,17 +76,10 @@ class KomfoventC4Client:
         Words that do not correspond to a documented register are skipped, so a
         block may span small gaps in the register map.
         """
-        async with self._lock:
-            result = await self.client.read_holding_registers(
-                address=start.address, count=count
-            )
-
-        if result.isError():
-            msg = f"Error reading {count} registers from {start}"
-            raise ModbusException(msg)
+        words = await self.read_words(start.number, count)
 
         data: dict[Register, int] = {}
-        for offset, word in enumerate(result.registers):
+        for offset, word in enumerate(words):
             register = BY_NUMBER.get(start.number + offset)
             if register is not None:
                 data[register] = decode(register.datatype, word)

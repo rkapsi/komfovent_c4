@@ -19,9 +19,10 @@ from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_TIME_ZONE, STATE_OFF, STATE_ON
+from homeassistant.exceptions import ServiceValidationError
 from pymodbus import ModbusException
 
-from custom_components.komfovent_c4.const import DOMAIN
+from custom_components.komfovent_c4.const import DOMAIN, SCHEDULE_COUNT, SCHEDULE_SLOTS
 from custom_components.komfovent_c4.registers import Register
 
 CLIMATE = "climate.komfovent_c4"
@@ -315,6 +316,78 @@ async def test_select_reflects_register(hass, setup_integration):
     assert hass.states.get("select.komfovent_c4_season").state == "winter"
     assert hass.states.get("select.komfovent_c4_operation_mode").state == "manual"
     assert hass.states.get("select.komfovent_c4_ventilation_level").state == "level_2"
+
+
+OPERATION_MODE = "select.komfovent_c4_operation_mode"
+
+
+async def _select(hass, entity_id: str, option: str) -> None:
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {ATTR_ENTITY_ID: entity_id, "option": option},
+        blocking=True,
+    )
+
+
+async def test_operation_mode_refuses_auto_with_empty_schedule(
+    hass, setup_integration, mock_client
+):
+    """The unit stays off under AUTO with nothing scheduled; do not let it."""
+    mock_client.write.reset_mock()
+    with pytest.raises(ServiceValidationError) as excinfo:
+        await _select(hass, OPERATION_MODE, "auto")
+
+    assert excinfo.value.translation_key == "schedule_empty"
+    mock_client.read_words.assert_awaited_once_with(1300, SCHEDULE_COUNT)
+    mock_client.write.assert_not_awaited()
+    assert hass.states.get(OPERATION_MODE).state == "manual"
+
+
+@pytest.mark.parametrize(
+    "slot",
+    [(0x0600, 0x0600, 2), (0x0800, 0x0600, 2), (0x0600, 0x0800, 0)],
+    ids=["zero-length", "ends-before-start", "level-0"],
+)
+async def test_operation_mode_ignores_slots_that_run_nothing(
+    hass, setup_integration, mock_client, slot
+):
+    words = [0] * SCHEDULE_COUNT
+    words[0], words[1], words[2 * SCHEDULE_SLOTS] = slot
+    mock_client.read_words.return_value = words
+
+    with pytest.raises(ServiceValidationError):
+        await _select(hass, OPERATION_MODE, "auto")
+
+
+async def test_operation_mode_switches_to_auto_with_a_schedule(
+    hass, setup_integration, mock_client
+):
+    words = [0] * SCHEDULE_COUNT
+    # Sunday's third slot: 22:00-24:00 at level 1.
+    words[40], words[41], words[SCHEDULE_COUNT - 1] = 0x1600, 0x1800, 1
+    mock_client.read_words.return_value = words
+    mock_client.write.reset_mock()
+
+    await _select(hass, OPERATION_MODE, "auto")
+
+    mock_client.write.assert_awaited_once_with(Register.OPERATION_MODE, 1)
+    assert hass.states.get(OPERATION_MODE).state == "auto"
+
+
+async def test_operation_mode_manual_does_not_read_the_schedule(
+    hass, setup_integration, mock_client, register_data
+):
+    register_data[Register.OPERATION_MODE] = 1
+    await hass.config_entries.async_reload(setup_integration.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(OPERATION_MODE).state == "auto"
+    mock_client.write.reset_mock()
+
+    await _select(hass, OPERATION_MODE, "manual")
+
+    mock_client.read_words.assert_not_awaited()
+    mock_client.write.assert_awaited_once_with(Register.OPERATION_MODE, 0)
 
 
 async def test_select_rejects_unknown_option(hass, setup_integration, mock_client):

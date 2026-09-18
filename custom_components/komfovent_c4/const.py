@@ -43,6 +43,14 @@ OVR_TIME_MAX: Final = 90
 INTENSITY_MIN: Final = 20
 INTENSITY_MAX: Final = 100
 
+# The weekly schedule, registers 1300-1362: three (start, stop) time pairs per
+# weekday at 1300-1341 followed by one level per slot at 1342-1362. It is not
+# polled or exposed; it is only read to refuse switching to AUTO when it is
+# empty, which would silently switch the unit off.
+SCHEDULE_FIRST: Final = 1300
+SCHEDULE_SLOTS: Final = 7 * 3
+SCHEDULE_COUNT: Final = SCHEDULE_SLOTS * 3
+
 
 class Season(IntEnum):
     """Register 1001 -- heating/cooling season."""

@@ -63,4 +63,8 @@ button writes and the clock sensor reads in that zone, nowhere else.
   are flat tables of `(Register, EntityDescription)`; add entities there.
 - Alarm registers 1007/1008 are bitfields. Never coerce them to 0/1.
 - The weekly schedule (1300-1362) is documented, dumped by diagnostics, but
-  not polled and has no entities. That is a decision, not an omission.
+  not polled and has no entities or `Register` members. That is a decision,
+  not an omission: scheduling lives in HA's Schedule helper (README). The only
+  runtime read of it is `coordinator.async_schedule_runs_anything`, via
+  `client.read_words`, which the operation-mode select uses to refuse AUTO on
+  an empty schedule (the unit would stay off).

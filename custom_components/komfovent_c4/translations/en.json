@@ -46,5 +46,20 @@
         }
       }
     }
+  },
+  "entity": {
+    "select": {
+      "operation_mode": {
+        "state": {
+          "manual": "Manual",
+          "auto": "Unit's weekly schedule"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "schedule_empty": {
+      "message": "The unit's own weekly schedule is empty, so it would stay off in this mode. Program the schedule on the unit's panel, or keep the mode manual and schedule the ventilation level from Home Assistant."
+    }
   }
 }
