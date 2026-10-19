@@ -82,12 +82,38 @@ class KomfoventC4ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def _already_configured(self, user_input: dict[str, Any]) -> bool:
+        """
+        Return whether an entry already points at this unit.
+
+        A unit is a (host, port, Modbus address) triple rather than a host: one
+        RS-485 bridge can front several C4s at different addresses, which is
+        the whole point of asking for the address. Entries created before it
+        was configurable store none and talk to ``DEFAULT_MODBUS_ADDRESS``, so
+        compare against that rather than letting them match nothing.
+        """
+        candidate = (
+            user_input[CONF_HOST],
+            user_input[CONF_PORT],
+            user_input[CONF_MODBUS_ADDRESS],
+        )
+        for entry in self._async_current_entries(include_ignore=False):
+            unit = (
+                entry.data[CONF_HOST],
+                entry.data[CONF_PORT],
+                entry.data.get(CONF_MODBUS_ADDRESS, DEFAULT_MODBUS_ADDRESS),
+            )
+            if unit == candidate:
+                return True
+        return False
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+            if self._already_configured(user_input):
+                return self.async_abort(reason="already_configured")
             return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
         return self.async_show_form(

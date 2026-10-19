@@ -34,7 +34,7 @@
       }
     },
     "abort": {
-      "already_configured": "This host is already configured.",
+      "already_configured": "A unit at this host, port and Modbus address is already configured.",
       "reconfigure_successful": "Reconfiguration was successful."
     }
   },

@@ -60,6 +60,9 @@ Ping2 it is the gateway's "Modbus ID of AHU". With a generic RS-485 bridge
 the C4, the unit does not answer at 1: use the address it reports in register
 1006.
 
+Several units may share one bridge: add the integration once per unit, same
+host and port, different Modbus address.
+
 If you do not know the address, try **254**. That is the address the C4's own
 panel polls, and the controller it was tested on answered at it as well as at
 its own address. This is Komfovent's behaviour, not a Modbus convention, and

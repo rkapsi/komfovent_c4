@@ -9,6 +9,11 @@ always goes through a bridge — Komfovent's Ping2 gateway in practice — so
 "the unit" on the wire is really the gateway. Write docs and UI text
 accordingly.
 
+A unit is identified by (host, port, Modbus address), never by host alone:
+RS-485 is multidrop, so one bridge can front several C4s. Entries created
+before the address was configurable store no `CONF_MODBUS_ADDRESS`; every
+read of it must fall back to `DEFAULT_MODBUS_ADDRESS`.
+
 ## Source of truth
 
 `docs/MODBUS_C4.pdf` is the only primary source. `docs/MODBUS_C4.md` is its

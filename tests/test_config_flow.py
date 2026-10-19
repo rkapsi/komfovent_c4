@@ -85,7 +85,31 @@ async def test_client_uses_entry_modbus_address(
     assert client_class.call_args.kwargs["device_id"] == expected
 
 
-async def test_user_flow_rejects_duplicate_host(hass, config_entry, mock_client):
+async def test_user_flow_rejects_the_same_unit_twice(hass, config_entry, mock_client):
+    """The fixture entry predates the address field, so it talks to address 1."""
+    config_entry.add_to_hass(hass)
+    assert CONF_MODBUS_ADDRESS not in config_entry.data
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            **USER_INPUT,
+            CONF_HOST: config_entry.data[CONF_HOST],
+            CONF_MODBUS_ADDRESS: 1,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_user_flow_allows_a_second_unit_on_the_same_bridge(
+    hass, config_entry, mock_client
+):
+    """One RS-485 bridge can front several C4s; only the address differs."""
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -93,11 +117,16 @@ async def test_user_flow_rejects_duplicate_host(hass, config_entry, mock_client)
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={**USER_INPUT, CONF_HOST: config_entry.data[CONF_HOST]},
+        user_input={
+            **USER_INPUT,
+            CONF_HOST: config_entry.data[CONF_HOST],
+            CONF_MODBUS_ADDRESS: 20,
+        },
     )
+    await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_MODBUS_ADDRESS] == 20
 
 
 async def test_reconfigure_updates_entry(hass, setup_integration, mock_client):
