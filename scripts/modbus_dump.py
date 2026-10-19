@@ -52,14 +52,21 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--host", required=True, help="Modbus TCP host")
     parser.add_argument("--port", type=int, default=502, help="Modbus TCP port")
+    parser.add_argument(
+        "--modbus-address", type=int, default=1, help="Modbus address of the unit"
+    )
     parser.add_argument("--output", default="registers.json", help="Output JSON file")
     args = parser.parse_args()
 
     dump_registers = _load_dump_registers()
 
     try:
-        _LOGGER.info("Connecting to %s:%d", args.host, args.port)
-        registers = asyncio.run(dump_registers(args.host, args.port))
+        _LOGGER.info(
+            "Connecting to %s:%d, unit %d", args.host, args.port, args.modbus_address
+        )
+        registers = asyncio.run(
+            dump_registers(args.host, args.port, args.modbus_address)
+        )
     except (ConnectionError, ModbusException):
         _LOGGER.exception("Dump failed")
         sys.exit(1)

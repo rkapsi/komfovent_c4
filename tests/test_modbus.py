@@ -67,7 +67,9 @@ async def test_read_block_maps_words_to_registers(client):
 
     data = await client.read_block(Register.SUPPLY_AIR_TEMP, 6)
 
-    client.client.read_holding_registers.assert_awaited_once_with(address=1199, count=6)
+    client.client.read_holding_registers.assert_awaited_once_with(
+        address=1199, count=6, device_id=1
+    )
     assert data[Register.SUPPLY_AIR_TEMP] == 250
     assert data[Register.SETPOINT_TEMP] == 200
     assert data[Register.TEMP_CORRECTION] == -90
@@ -122,7 +124,9 @@ async def test_write_uses_zero_based_address(client):
 
     await client.write(Register.SETPOINT_TEMP, 205)
 
-    client.client.write_register.assert_awaited_once_with(address=1200, value=205)
+    client.client.write_register.assert_awaited_once_with(
+        address=1200, value=205, device_id=1
+    )
 
 
 async def test_write_encodes_negative_values(client):
@@ -130,7 +134,9 @@ async def test_write_encodes_negative_values(client):
 
     await client.write(Register.TEMP_CORRECTION, -90)
 
-    client.client.write_register.assert_awaited_once_with(address=1201, value=0xFFA6)
+    client.client.write_register.assert_awaited_once_with(
+        address=1201, value=0xFFA6, device_id=1
+    )
 
 
 async def test_write_rejects_read_only_register(client):
@@ -147,3 +153,20 @@ async def test_write_raises_on_error(client):
 
     with pytest.raises(ModbusException):
         await client.write(Register.POWER, 1)
+
+
+async def test_requests_go_to_configured_modbus_address():
+    with patch("custom_components.komfovent_c4.modbus.AsyncModbusTcpClient"):
+        client = KomfoventC4Client("192.0.2.10", device_id=20)
+    client.client.read_holding_registers = AsyncMock(return_value=_response(1))
+    client.client.write_register = AsyncMock(return_value=_response())
+
+    await client.read(Register.POWER)
+    await client.write(Register.POWER, 0)
+
+    client.client.read_holding_registers.assert_awaited_once_with(
+        address=999, count=1, device_id=20
+    )
+    client.client.write_register.assert_awaited_once_with(
+        address=999, value=0, device_id=20
+    )

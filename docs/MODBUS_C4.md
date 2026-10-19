@@ -149,6 +149,15 @@ Points worth knowing that the PDF does not state:
 - 1300–1362 were all zero: an unused schedule reads as `0x0000` rather than
   as a default programme.
 
+### Without a Ping2
+
+A second unit was read on 2026-10-15 through an Elfin EW11 (RS-485 to Modbus
+TCP, 19200 8E1) plugged straight into the C4's RJ-45 panel socket, no Ping2:
+
+- The socket's pinout matches the one above: 4 = A, 5 = B, 6 = GND. Pin 3
+  carries the panel's supply, about +19 V against pin 6 — not ground, though
+  it reads 16 V against pin 4 and is easily mistaken for it.
+
 ### Write behaviour
 
 Measured on the same unit:

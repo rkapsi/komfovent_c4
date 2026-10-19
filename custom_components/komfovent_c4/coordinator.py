@@ -17,6 +17,8 @@ from homeassistant.util import dt as dt_util
 from pymodbus.exceptions import ModbusException
 
 from .const import (
+    CONF_MODBUS_ADDRESS,
+    DEFAULT_MODBUS_ADDRESS,
     DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
     SCHEDULE_COUNT,
@@ -60,6 +62,9 @@ class KomfoventC4Coordinator(TimestampDataUpdateCoordinator[dict[Register, int]]
         self.client = KomfoventC4Client(
             host=config_entry.data[CONF_HOST],
             port=config_entry.data[CONF_PORT],
+            device_id=config_entry.data.get(
+                CONF_MODBUS_ADDRESS, DEFAULT_MODBUS_ADDRESS
+            ),
         )
         self._cancel_settle: Callable[[], None] | None = None
 

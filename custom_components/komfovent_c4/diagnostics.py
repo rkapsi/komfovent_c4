@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.const import CONF_HOST, CONF_PORT
 from pymodbus import ModbusException
 
-from .const import DOMAIN
+from .const import CONF_MODBUS_ADDRESS, DEFAULT_MODBUS_ADDRESS, DOMAIN
 from .dump import dump_registers
 
 if TYPE_CHECKING:
@@ -27,7 +27,11 @@ async def async_get_config_entry_diagnostics(
     coordinator: KomfoventC4Coordinator = hass.data[DOMAIN][entry.entry_id]
 
     try:
-        registers = await dump_registers(entry.data[CONF_HOST], entry.data[CONF_PORT])
+        registers = await dump_registers(
+            entry.data[CONF_HOST],
+            entry.data[CONF_PORT],
+            entry.data.get(CONF_MODBUS_ADDRESS, DEFAULT_MODBUS_ADDRESS),
+        )
     except (ConnectionError, ModbusException):
         _LOGGER.exception("Failed to dump registers")
         registers = {}

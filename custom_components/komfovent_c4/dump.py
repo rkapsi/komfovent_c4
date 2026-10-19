@@ -24,7 +24,9 @@ DUMP_RANGES: tuple[tuple[int, int], ...] = (
 )
 
 
-async def dump_registers(host: str, port: int) -> dict[int, list[int]]:
+async def dump_registers(
+    host: str, port: int, device_id: int = 1
+) -> dict[int, list[int]]:
     """
     Read every documented register and return the raw words.
 
@@ -43,7 +45,7 @@ async def dump_registers(host: str, port: int) -> dict[int, list[int]]:
     try:
         for start, count in DUMP_RANGES:
             response = await client.read_holding_registers(
-                address=start - 1, count=count
+                address=start - 1, count=count, device_id=device_id
             )
             if not response.isError():
                 results[start] = response.registers
@@ -55,7 +57,7 @@ async def dump_registers(host: str, port: int) -> dict[int, list[int]]:
             _LOGGER.warning("Block read from %d failed, reading individually", start)
             for number in range(start, start + count):
                 response = await client.read_holding_registers(
-                    address=number - 1, count=1
+                    address=number - 1, count=1, device_id=device_id
                 )
                 if response.isError():
                     _LOGGER.warning("Register %d: read failed", number)

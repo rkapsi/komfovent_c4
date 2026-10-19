@@ -32,8 +32,9 @@ def encode(datatype: DataType, value: int) -> int:
 class KomfoventC4Client:
     """Reads and writes C4 holding registers over Modbus TCP."""
 
-    def __init__(self, host: str, port: int = 502) -> None:
-        """Initialize the Modbus client."""
+    def __init__(self, host: str, port: int = 502, device_id: int = 1) -> None:
+        """Initialize the Modbus client for the unit at Modbus address ``device_id``."""
+        self.device_id = device_id
         self.client = AsyncModbusTcpClient(
             host=host,
             port=port,
@@ -61,7 +62,7 @@ class KomfoventC4Client:
         """
         async with self._lock:
             result = await self.client.read_holding_registers(
-                address=number - 1, count=count
+                address=number - 1, count=count, device_id=self.device_id
             )
 
         if result.isError():
@@ -97,7 +98,9 @@ class KomfoventC4Client:
 
         async with self._lock:
             result = await self.client.write_register(
-                address=register.address, value=encode(register.datatype, value)
+                address=register.address,
+                value=encode(register.datatype, value),
+                device_id=self.device_id,
             )
 
         if result.isError():

@@ -12,6 +12,15 @@ MODEL: Final = "C4"
 DEFAULT_NAME: Final = "Komfovent C4"
 DEFAULT_PORT: Final = 502
 
+# The unit's Modbus address (device id). 1 is what pymodbus sends when none is
+# given, i.e. what every entry created before the address was configurable
+# used. A C4 wired straight to a bridge answers at the address it reports in
+# register 1006, and also at 254, the address its own panel polls.
+CONF_MODBUS_ADDRESS: Final = "modbus_address"
+DEFAULT_MODBUS_ADDRESS: Final = 1
+MODBUS_ADDRESS_MIN: Final = 1
+MODBUS_ADDRESS_MAX: Final = 254
+
 # Options
 OPT_UPDATE_INTERVAL: Final = "update_interval"
 DEFAULT_UPDATE_INTERVAL: Final = 30  # seconds

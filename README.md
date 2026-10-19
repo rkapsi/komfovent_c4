@@ -54,6 +54,17 @@ You will need the IP address of the Ping2 gateway (or whatever bridge sits
 in front of the unit) and its Modbus TCP port, which the documentation gives
 as 502.
 
+It also asks for the unit's **Modbus address**, which defaults to 1. Behind a
+Ping2 it is the gateway's "Modbus ID of AHU". With a generic RS-485 bridge
+(e.g. an Elfin EW11 in Modbus TCP-to-RTU mode at 19200 8E1) wired straight to
+the C4, the unit does not answer at 1: use the address it reports in register
+1006.
+
+If you do not know the address, try **254**. That is the address the C4's own
+panel polls, and the controller it was tested on answered at it as well as at
+its own address. This is Komfovent's behaviour, not a Modbus convention, and
+has not been confirmed on other units.
+
 The form also asks for the time zone the controller's clock is kept in. It
 defaults to Home Assistant's own zone, which is right unless the unit is
 somewhere else; the clock sensor and the sync-clock button both use it.
@@ -156,6 +167,8 @@ can reach the unit:
 ```bash
 python3 scripts/modbus_dump.py --host <unit-ip> --output tests/fixtures/C4_registers_mine.json
 ```
+
+Add `--modbus-address <n>` if the unit is not at address 1.
 
 Then serve that dump as a fake C4 and point the integration (or the live
 tests) at it:

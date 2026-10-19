@@ -23,10 +23,14 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CONF_MODBUS_ADDRESS,
+    DEFAULT_MODBUS_ADDRESS,
     DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
+    MODBUS_ADDRESS_MAX,
+    MODBUS_ADDRESS_MIN,
     OPT_UPDATE_INTERVAL,
 )
 
@@ -49,6 +53,9 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        vol.Required(CONF_MODBUS_ADDRESS, default=DEFAULT_MODBUS_ADDRESS): vol.All(
+            int, vol.Range(min=MODBUS_ADDRESS_MIN, max=MODBUS_ADDRESS_MAX)
+        ),
         vol.Required(CONF_TIME_ZONE): TIME_ZONE_SELECTOR,
     }
 )
